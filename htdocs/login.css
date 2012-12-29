@@ -28,9 +28,9 @@ body {
 
 #main {
     position: fixed;
-    width: 300px;
+    width: 350px;
     height: 300px;
-    margin-left: -150px;
+    margin-left: -175px;
     margin-top: -150px;
     overflow: auto;
     border: 1px solid #777;

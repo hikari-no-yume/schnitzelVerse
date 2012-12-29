@@ -4,11 +4,13 @@ var http = require('http');
 var debugMode = process.argv.hasOwnProperty('2') && process.argv[2] === '--debug';
 
 var allowedOrigin = 'http://schnitzelverse.ajf.me';
+var requests = 0;
 
 var server = http.createServer(function(request, response) {
     var headers;
 
     console.log((new Date()) + ' Received request for ' + request.url);
+    requests++;
     if (debugMode) {
         headers = {
             'Access-Control-Allow-Origin': '*'
@@ -21,7 +23,8 @@ var server = http.createServer(function(request, response) {
     if (request.url === '/stats' && request.method === 'GET') {
         response.writeHead(200, headers);
         response.end(JSON.stringify({
-            users_online: Math.floor(Math.random() * 128) + 64
+            users_online: Math.floor(Math.random() * 128) + 64,
+            requests: requests
         }));
     } else {
         response.writeHead(404, headers);

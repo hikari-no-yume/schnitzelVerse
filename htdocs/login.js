@@ -21,7 +21,7 @@
             if (xhr.readyState === 4 && xhr.status === 200) {
                 stats = JSON.parse(xhr.responseText);
                 div.innerHTML = '';
-                div.appendChild(document.createTextNode(stats.users_online + ' users online'));
+                div.appendChild(document.createTextNode(stats.users_online + ' users online | ' + stats.requests + ' requests since reboot'));
             }
         }
         if (window.location.hostname === 'localhost') {
