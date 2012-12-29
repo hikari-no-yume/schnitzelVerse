@@ -23,14 +23,14 @@
                 div.innerHTML = '';
                 div.appendChild(document.createTextNode(stats.users_online + ' users offline | ' + stats.requests + ' requests since reboot'));
             }
-        }
+        };
         if (window.location.hostname === 'localhost') {
             xhr.open('GET', 'http://localhost:9002/stats', true);
         } else {
             xhr.open('GET', 'http://ajf.me:9002/stats', true);
         }
         xhr.send();
-        
+
         div.innerHTML = '';
         div.appendChild(document.createTextNode('loading stats...'));
     }
