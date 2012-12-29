@@ -29,7 +29,7 @@ var server = http.createServer(function(request, response) {
     }
 });
 server.listen(9002, function() {
-    console.log((new Date()) + ' Server is listening on port 9001');
+    console.log((new Date()) + ' Server is listening on port 9002');
 });
 
 wsServer = new websocket.server({
