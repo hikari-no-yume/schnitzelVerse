@@ -3,7 +3,7 @@ var http = require('http');
 
 var debugMode = process.argv.hasOwnProperty('2') && process.argv[2] === '--debug';
 
-var allowedOrigin = 'http://ponyplace.ajf.me/';
+var allowedOrigin = 'http://schnitzelverse.ajf.me/';
 
 var server = http.createServer(function(request, response) {
     var headers;
