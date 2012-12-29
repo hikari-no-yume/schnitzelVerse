@@ -29,9 +29,9 @@ body {
 #main {
     position: fixed;
     width: 350px;
-    height: 300px;
+    height: 350px;
     margin-left: -175px;
-    margin-top: -150px;
+    margin-top: -175px;
     overflow: auto;
     border: 1px solid #777;
     padding: 5px;
@@ -60,6 +60,15 @@ body {
 }
 #login-form input, #login-form button {
     width: 100%;
+}
+.field-errors {
+    color: red;
+}
+.field-valid {
+    border: 2px solid lime;
+}
+.field-invalid {
+    border: 2px solid red;
 }
 #stats:not(:empty) {
     background-color: black;

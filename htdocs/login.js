@@ -13,15 +13,24 @@
         document.body.appendChild(script);
     }
 
+    function clearForm(div) {
+        div.innerHTML = '';
+        div.appendChild(document.createTextNode('Loading schnitzelVerse...'));
+    }
+
     function fetchStats(div) {
         var xhr, stats;
 
         xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                stats = JSON.parse(xhr.responseText);
+            if (xhr.readyState === 4) {
                 div.innerHTML = '';
-                div.appendChild(document.createTextNode(stats.users_online + ' users offline | ' + stats.requests + ' requests since reboot'));
+                if (xhr.status === 200) {
+                    stats = JSON.parse(xhr.responseText);
+                    div.appendChild(document.createTextNode(stats.clients_connected + ' clients connected'));
+                } else {
+                    div.appendChild('Loading stats failed');
+                }
             }
         };
         if (window.location.hostname === 'localhost') {
@@ -36,7 +45,7 @@
     }
 
     function makeLoginForm(div) {
-        var desc1, desc2, loginbtn, nick, signupbtn;
+        var desc1, desc2, loginbtn, nickerrors, nick, signupbtn;
 
         desc1 = document.createElement('p');
         desc1.appendChild(document.createTextNode('Log in with Persona below, if you already have a schnitzelVerse account.'));
@@ -50,9 +59,10 @@
                 onlogin: function (assertion) {
                     window.ponyplace = {
                         assertion: assertion,
-                        mode: 'login'
+                        mode: 'existing'
                     };
                     loadStageTwo();
+                    clearForm(div);
                 },
                 onlogout: function () {}
             });
@@ -64,26 +74,50 @@
         desc2.appendChild(document.createTextNode('Or create a new schnitzelVerse account with your Persona account. Nickname must be 3-18 characters, letters, digits and underscores (_) only.'));
         div.appendChild(desc2);
 
+        nickerrors = document.createElement('div');
+        nickerrors.className = 'field-errors';
+        div.appendChild(nickerrors);
+
         nick = document.createElement('input');
         nick.type = 'text';
         nick.placeholder = 'Nickname';
+        /^[a-zA-Z0-9_]+$/g
+        nick.onkeyup = function () {
+            nickerrors.innerHTML = '';
+            if (nick.value.length < 3) {
+                nickerrors.appendChild(document.createTextNode('Nickname is too short, must be at least 3 characters'));
+                nick.className = 'field-invalid';
+            } else if (nick.value.length > 18) {
+                nickerrors.appendChild(document.createTextNode('Nickname is too long, must be a maximum of 18 characters'));
+                nick.className = 'field-invalid';
+            } else if (!nick.value.match(/^[a-zA-Z0-9_]+$/g)) {
+                nickerrors.appendChild(document.createTextNode('Nickname must only contain letters, digits and underscores (_)'));
+                nick.className = 'field-invalid';
+            } else {
+                nick.className = 'field-valid';
+            }
+        };
         div.appendChild(nick);
 
         signupbtn = document.createElement('button');
         signupbtn.appendChild(document.createTextNode('Sign up with Persona'));
         signupbtn.onclick = function () {
+            var nickname;
+
             if (!nick.value) {
                 return;
             }
+            nickname = nick.value.replace(/^\s+|\s+$/g, '');
             navigator.id.watch({
                 loggedInUser: null,
                 onlogin: function (assertion) {
                     window.ponyplace = {
                         assertion: assertion,
                         mode: 'signup',
-                        nick: nick.value
+                        nick: nickname
                     };
                     loadStageTwo();
+                    clearForm(div);
                 },
                 onlogout: function () {}
             });
