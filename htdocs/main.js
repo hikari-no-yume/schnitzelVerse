@@ -18,7 +18,6 @@
         inventorylist, inventorylistbutton,
         friendslist, friendslistbutton,
         roomlistbutton, roomlist, refreshbutton, homebutton,
-        roomedit, roomeditbutton, roomeditreset, roomeditvisible,
         chatbar, chatbox, chatboxholder, chatbutton, chatlog, chatloglock, chatloglocked = false;
 
     var userManager = {
@@ -419,15 +418,6 @@
 
         // update URL hash
         window.location.hash = room.name;
-
-        // hide/show room edit button
-        if (room.type === 'house' && myNick === room.user_nick) {
-            roomeditbutton.style.display = 'block';
-        } else {
-            roomeditbutton.style.display = 'none';
-            roomedit.style.display = 'none';
-            roomeditvisible = false;
-        }
     }
 
     function doMove(x, y) {
@@ -1099,40 +1089,6 @@
         };
         accountsettingsbutton.disabled = true;
         topbuttons.appendChild(accountsettingsbutton);
-
-        roomeditbutton = document.createElement('input');
-        roomeditbutton.id = 'room-edit-button';
-        roomeditbutton.type = 'submit';
-        roomeditbutton.value = 'Edit House';
-        roomeditbutton.onclick = function () {
-            if (roomeditvisible) {
-                roomedit.style.display = 'none';
-                roomeditvisible = false;
-            } else {
-                roomedit.style.display = 'block'
-                roomeditvisible = true;
-            }
-        };
-        roomeditbutton.style.display = 'none';
-        container.appendChild(roomeditbutton);
-
-        roomedit = document.createElement('div');
-        roomedit.id = 'room-edit';
-        roomedit.style.display = 'none';
-        appendText(roomedit, 'Buy house backgrounds from the Carousel Boutique. Change your house background by clicking one in your inventory.');
-        roomeditvisible = false;
-        container.appendChild(roomedit);
-
-        roomeditreset = document.createElement('input');
-        roomeditreset.type = 'submit';
-        roomeditreset.value = 'Reset to default';
-        roomeditreset.onclick = function () {
-            socket.send(JSON.stringify({
-                type: 'change_house_background',
-                bg_name: null
-            }));
-        };
-        roomedit.appendChild(roomeditreset);
 
         accountsettings = makePopup('#account-settings', 'My Account', true, 300, 300, true);
         accountsettings.hide();

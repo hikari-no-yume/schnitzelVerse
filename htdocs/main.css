@@ -153,17 +153,6 @@ body {
     height: 160px;
 }
 
-#room-edit {
-    position: absolute;
-    right: 6px;
-    top: 66px;
-    width: 280px;
-    height: 80px;
-    padding: 6px;
-    background-color: white;
-    border: 4px solid #333;
-}
-
 #music {
     position: absolute;
     right: 0;
@@ -204,12 +193,6 @@ input[type=submit], .button, button {
 #bit-count::after {
     margin-left: 4px;
     content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAASCAYAAABit09LAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAXklEQVQoz2NkgIKP9/P/w9gf7u+EMRnknW4wMjAwMDCiK8KlmAmbBDbAxEAkYMJmLQMDA4OAojuc/XCfxn8mmLXIEpRZPXIVCii6E45CfsWJjBRZjTP1EIpCRmITLgDj5Skiz9Zq8QAAAABJRU5ErkJggg==);
-}
-
-#room-edit-button {
-    position: absolute;
-    top: 42px;
-    right: 6px;
 }
 
 #usercounter {
