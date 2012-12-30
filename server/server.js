@@ -70,6 +70,11 @@ function sanitiseChat(chat) {
     return chat;
 }
 
+function sanitiseObject(obj, nick) {
+    obj.owner = nick;
+    return obj;
+}
+
 var banManager = {
     bannedIPs: [],
 
@@ -115,17 +120,35 @@ var roomManager = {
     has: function (name) {
         return this.rooms.hasOwnProperty(name);
     },
+    get: function (name) {
+        var room = {
+            name: name
+        };
+
+        if (this.has(name)) {
+            room.objects = this.rooms[name].objects;
+            room.objectOrder = this.rooms[name].objectOrder;
+        } else {
+            room.objects = {};
+            room.objectOrder = [];
+        }
+        return room;
+    },
     onJoin: function (name) {
         if (this.rooms.hasOwnProperty(name)) {
-            this.rooms[name]++;
+            this.rooms[name].user_count++;
         } else {
-            this.rooms[name] = 1;
+            this.rooms[name] = {
+                objects: {},
+                objectOrder: [],
+                user_count: 1
+            };
         }
     },
     onLeave: function (name) {
         if (this.rooms.hasOwnProperty(name)) {
-            this.rooms[name]--;
-            if (this.rooms[name] <= 0) {
+            this.rooms[name].user_count--;
+            if (this.rooms[name].user_count <= 0 && this.rooms[name].objectOrder.length === 0) {
                 delete this.rooms[name];
             }
         }
@@ -135,10 +158,8 @@ var roomManager = {
         for (var name in this.rooms) {
             if (this.rooms.hasOwnProperty(name)) {
                 list.push({
-                    type: 'ephemeral',
                     name: name,
-                    user_count: this.rooms[name],
-                    thumbnail: '/media/rooms/cave-thumb.png'
+                    user_count: this.rooms[name].user_count
                 });
             }
         }
@@ -336,13 +357,7 @@ var modMessages = {
 modMessages.init();
 
 function doRoomChange(roomName, user) {
-    var room;
-
-    room = {
-        type: 'ephemeral',
-        name: roomName
-    };
-
+    var room = roomManager.get(roomName);
     var oldRoom = user.room;
 
     // don't if in null room (lobby)
@@ -915,6 +930,101 @@ wsServer.on('request', function(request) {
                     type: 'console_msg',
                     msg: 'Home room set to "' + user.room + '"'
                 });
+            break;
+            case 'object_add':
+                if (user.room) {
+                    var room = roomManager.get(user.room);
+                    if (room.objects.hasOwnProperty(msg.name)) {
+                        user.send({
+                            type: 'console_msg',
+                            msg: 'There is already an object named "' + msg.name + '"'
+                        });
+                    } else {
+                        var object = sanitiseObject(msg.data, myNick);
+                        room.objectOrder.push(msg.name);
+                        room.objects[msg.name] = object;
+
+                        // broadcast new state to other clients in same room
+                        User.forEach(function (iterUser) {
+                            if (iterUser.room === user.room) {
+                                iterUser.send({
+                                    type: 'object_add',
+                                    data: object,
+                                    name: msg.name
+                                });
+                            }
+                        });
+                    }
+                } else {
+                    user.kick('protocol_error');
+                }
+            break;
+            case 'object_update':
+                if (user.room) {
+                    var room = roomManager.get(user.room);
+                    if (room.objects.hasOwnProperty(msg.name)) {
+                        if (room.objects[msg.name].owner === myNick || User.isModerator(myNick)) {
+                            var object = sanitiseObject(msg.data, myNick);
+                            room.objects[msg.name] = object;
+
+                            // broadcast new state to other clients in same room
+                            User.forEach(function (iterUser) {
+                                if (iterUser.room === user.room) {
+                                    iterUser.send({
+                                        type: 'object_update',
+                                        data: object,
+                                        name: msg.name
+                                    });
+                                }
+                            });
+                        } else {
+                            user.send({
+                                type: 'console_msg',
+                                msg: 'The object "' + msg.name + '" does not belong to you'
+                            });
+                        }
+                    } else {
+                        user.send({
+                            type: 'console_msg',
+                            msg: 'There is no object named "' + msg.name + '"'
+                        });
+                    }
+                } else {
+                    user.kick('protocol_error');
+                }
+            break;
+            case 'object_delete':
+                if (user.room) {
+                    var room = roomManager.get(user.room);
+                    if (room.objects.hasOwnProperty(msg.name)) {
+                        if (room.objects[msg.name].owner === myNick || User.isModerator(myNick)) {
+                            room.objectOrder.splice(room.objectOrder.indexOf(msg.name), 1);
+                            delete room.objects[msg.name];
+
+                            // broadcast new state to other clients in same room
+                            User.forEach(function (iterUser) {
+                                if (iterUser.room === user.room) {
+                                    iterUser.send({
+                                        type: 'object_delete',
+                                        name: msg.name
+                                    });
+                                }
+                            });
+                        } else {
+                            user.send({
+                                type: 'console_msg',
+                                msg: 'The object "' + msg.name + '" does not belong to you'
+                            });
+                        }
+                    } else {
+                        user.send({
+                            type: 'console_msg',
+                            msg: 'There is no object named "' + msg.name + '"'
+                        });
+                    }
+                } else {
+                    user.kick('protocol_error');
+                }
             break;
             case 'room_list':
                 // tell client about rooms

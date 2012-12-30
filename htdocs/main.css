@@ -142,7 +142,7 @@ body {
     border: 4px solid lime;
 }
 
-.profile .popup-content button, #loginbox .popup-content input, #account-settings .popup-content input, #account-settings .popup-content button, #bit-count, #account-settings .popup-content .button, #room-list .popup-content button {
+.profile .popup-content button, #loginbox .popup-content input, #account-settings .popup-content input, #account-settings .popup-content button, #bit-count, #account-settings .popup-content .button, #room-list .popup-content button, #edit-dlg .popup-content button, #edit-dlg .popup-content select {
     display: block;
     width: 100%;
     margin-bottom: 6px;

@@ -2,10 +2,11 @@
     'use strict';
 
     var socket, connected = false, connecting = false, ignoreDisconnect = false, pageFocussed = false, unseenHighlights = 0,
-        me, myNick, myRoom = null, myRoomWidth = 0, myRoomHeight = 0, mySpecialStatus, avatarInventory, inventory = [], friends = [],
+        me, myNick, myRoom = null, mySpecialStatus, avatarInventory, inventory = [], friends = [],
+        roomObjects = {}, roomObjectOrder = [],
         blockMovement = false, moveInterval = null, oldImgIndex = 0,
         cameraX = 0, cameraY = 0,
-        editing = false,
+        editing = false, selected = null,
         currentUser = null,
         lastmove = (new Date().getTime()),
         globalUserCount = 0, globalModCount = 0,
@@ -14,7 +15,7 @@
     var container,
         worldcanvas, ctx,
         topbuttons,
-        editbutton, editdlg,
+        editbutton, editdlg, objectlist, newobjectbtn, editprops, editpropshead, editpropsupdate, editpropsdelete,
         accountsettings, accountsettingsbutton, changepassbutton, rmpassbutton, sethomebutton,
         bitcount,
         inventorylist, inventorylistbutton,
@@ -134,6 +135,30 @@
             appendText(this.userCounter, str);
         }
     };
+
+    var imageCache = {
+        cache: {},
+
+        get: function (url) {
+            var img, that = this;
+
+            if (!this.cache.hasOwnProperty(url)) {
+                console.log("GET - Don't yet have: " + url);
+                img = document.createElement('img');
+                img.src = url;
+                this.cache[url] = null;
+                img.onload = function () {
+                    that.cache[url] = img;
+                };
+            }
+            return this.cache[url];
+        }
+    };
+
+    function amModerator() {
+        var status = mySpecialStatus;
+        return (status === 'moderator' || status === 'developer' || status === 'creator' || status === 'bot');
+    }
 
     function pushState() {
         if (connected) {
@@ -426,6 +451,9 @@
 
         // enable set home button
         sethomebutton.disabled = false;
+
+        // update object list
+        refreshObjectList();
     }
 
     function doMove(x, y) {
@@ -854,25 +882,29 @@
         if (inventory.length) {
             for (var i = 0; i < inventory.length; i++) {
                 var name = inventory[i];
-                /*
-                if (inventoryItems.hasOwnProperty(name)) {
-                    var preview = document.createElement('img');
-                    preview.src = inventoryItems[name].img;
-                    preview.title = inventoryItems[name].name_full;
-                    preview.className = 'inventory-item-preview';
-                    if (inventoryItems[name].type !== 'useless') {
-                        preview.className += ' inventory-item-clickable';
-                        (function (itemName, item) {
-                            preview.onclick = function () {
-                                handleItemClick(itemName, item);
-                            };
-                        }(name, inventoryItems[name]));
-                    }
-                    inventorylist.content.appendChild(preview);
-                }*/
             }
         } else {
             appendText(inventorylist.content, 'You have no inventory items.');
+        }
+    }
+
+    function refreshObjectList() {
+        var i, option;
+
+        objectlist.innerHTML = '';
+
+        option = document.createElement('option');
+        option.value = '';
+        appendText(option, '');
+        objectlist.appendChild(option);
+
+        if (myRoom) {
+            for (i = 0; i < myRoom.objectOrder.length; i++) {
+                option = document.createElement('option');
+                option.value = myRoom.objectOrder[i];
+                appendText(option, myRoom.objectOrder[i]);
+                objectlist.appendChild(option);
+            }
         }
     }
 
@@ -896,63 +928,94 @@
     }
 
     function render() {
-        var radGrad;
+        var radGrad, i, object, objectName, img;
 
         worldcanvas.width = window.innerWidth;
         worldcanvas.height = window.innerHeight - 36;
 
-        ctx.save();
-        ctx.translate(cameraX, cameraY);
-
-        // room background
-        ctx.rect(-400, -400, 800, 800);
-        radGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, 400);
-        radGrad.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
-        radGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = radGrad;
-        ctx.fill();
-
-        // users
-        userManager.forEach(function (nick) {
-            var user = userManager.get(nick),
-                shadows = [
-                    [-1, -1],
-                    [1, -1],
-                    [-1, 1],
-                    [1, 1],
-                    [0, -1],
-                    [0, 1],
-                    [-1, 0],
-                    [1, 0]
-                ],
-                i, vOffset;
-
+        if (myRoom) {
             ctx.save();
-            ctx.translate(user.obj.x, user.obj.y);
+            ctx.translate(cameraX, cameraY);
 
-            if (user.imgData) {
-                vOffset = user.imgData.height / 2;
-                ctx.drawImage(user.img, -user.imgData.width / 2, -vOffset);
-            } else {
-                vOffset = 0;
+            // room background
+            ctx.rect(-400, -400, 800, 800);
+            radGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, 400);
+            radGrad.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+            radGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = radGrad;
+            ctx.fill();
+
+            // objects
+            for (i = 0; i < myRoom.objectOrder.length; i++) {
+                objectName = myRoom.objectOrder[i];
+                object = myRoom.objects[objectName];
+
+                ctx.save();
+                ctx.translate(object.x, object.y);
+
+                ctx.rotate(object.angle * (Math.PI/180));
+
+                if (editing) {
+                    if (selected === objectName) {
+                        ctx.strokeStyle = 'red';
+                    } else {
+                        ctx.strokeStyle = 'lime';
+                    }
+                    ctx.strokeRect(-object.width/2, -object.height/2, object.width, object.height);
+                }
+
+                ctx.globalAlpha = object.alpha / 255;
+
+                img = imageCache.get(object.img);
+                if (img) {
+                    ctx.drawImage(img, -object.width/2, -object.height/2, object.width, object.height);
+                }
+
+                ctx.restore();
             }
 
-            ctx.font = 'bold 11pt sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseLine = 'top';
-            ctx.fillStyle = 'white';
-            ctx.shadowColor = 'black';
+            // users
+            userManager.forEach(function (nick) {
+                var user = userManager.get(nick),
+                    shadows = [
+                        [-1, -1],
+                        [1, -1],
+                        [-1, 1],
+                        [1, 1],
+                        [0, -1],
+                        [0, 1],
+                        [-1, 0],
+                        [1, 0]
+                    ],
+                    i, vOffset;
 
-            for (i = 0; i < shadows.length; i++) {
-                ctx.shadowOffsetX = shadows[i][0];
-                ctx.shadowOffsetY = shadows[i][1];
-                ctx.fillText(nick, 0, vOffset);
-            }
+                ctx.save();
+                ctx.translate(user.obj.x, user.obj.y);
+
+                if (user.imgData) {
+                    vOffset = user.imgData.height / 2;
+                    ctx.drawImage(user.img, -user.imgData.width / 2, -vOffset);
+                } else {
+                    vOffset = 0;
+                }
+
+                ctx.font = 'bold 11pt sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseLine = 'top';
+                ctx.fillStyle = 'white';
+                ctx.shadowColor = 'black';
+
+                for (i = 0; i < shadows.length; i++) {
+                    ctx.shadowOffsetX = shadows[i][0];
+                    ctx.shadowOffsetY = shadows[i][1];
+                    ctx.fillText(nick, 0, vOffset);
+                }
+
+                ctx.restore();
+            });
 
             ctx.restore();
-        });
-
-        ctx.restore();
+        }
         
         window.requestAnimationFrame(render);
     }
@@ -1057,6 +1120,170 @@
         chatbar.appendChild(inventorylistbutton);
     }
 
+    function initGUI_editDlg() {
+        var props = [
+            {
+                property: 'owner',
+                type: 'readonly'
+            },
+            {
+                property: 'img',
+                type: 'text'
+            },
+            {
+                property: 'angle',
+                type: 'number'
+            },
+            {
+                property: 'alpha',
+                type: 'number'
+            },
+            {
+                property: 'x',
+                type: 'number'
+            },
+            {
+                property: 'y',
+                type: 'number'
+            },
+            {
+                property: 'width',
+                type: 'number'
+            },
+            {
+                property: 'height',
+                type: 'number'
+            }
+        ];
+
+        editbutton = document.createElement('button');
+        editbutton.id = 'edit-button';
+        appendText(editbutton, 'Edit objects');
+        editbutton.onclick = function () {
+            editdlg.show();
+        };
+        editbutton.disabled = true;
+        topbuttons.appendChild(editbutton);
+
+        editdlg = makePopup('#edit-dlg', 'Edit objects', true, 300, 300, true, function () {
+            editing = false;
+        }, function () {
+            editing = true;
+            refreshObjectList();
+        });
+        editdlg.hide();
+
+        objectlist = document.createElement('select');
+        objectlist.onchange = function () {
+            var i, prop;
+            if (objectlist.value) {
+                selected = objectlist.value;
+                if (myRoom.objects[selected].owner === myNick || amModerator()) {
+                    editprops.disabled = false;
+                } else {
+                    editprops.disabled = true;
+                }
+
+                for (i = 0; i < props.length; i++) {
+                    prop = props[i];
+                    prop.element.value = myRoom.objects[selected][prop.property];
+                }
+            } else {
+                selected = null;
+                editprops.disabled = true;
+            }
+        };
+        refreshObjectList();
+        editdlg.content.appendChild(objectlist);
+
+        newobjectbtn = document.createElement('button');
+        newobjectbtn.id = 'new-object-btn';
+        appendText(newobjectbtn, 'Create new object');
+        newobjectbtn.onclick = function () {
+            var objectName = prompt('Choose an object name', '');
+            if (objectName) {
+                socket.send(JSON.stringify({
+                    type: 'object_add',
+                    name: objectName,
+                    data: {
+                        img: '/media/avatars/derpy_left_hover.gif',
+                        angle: 0,
+                        alpha: 255,
+                        x: me.x + 200,
+                        y: me.y,
+                        width: 50,
+                        height: 50
+                    }
+                }));
+            }
+        };
+        editdlg.content.appendChild(newobjectbtn);
+
+        editprops = document.createElement('fieldset');
+        editprops.disabled = true;
+        editdlg.content.appendChild(editprops);
+
+        editpropshead = document.createElement('legend');
+        appendText(editpropshead, 'Properties');
+        editprops.appendChild(editpropshead);
+
+        for (var i = 0; i < props.length; i++) {
+            var prop = props[i];
+
+            appendText(editprops, prop.property + ': ');
+
+            var field = document.createElement('input');
+            if (field.type === 'readonly') {
+                field.type = 'text';
+                field.readonly = true;
+            } else {
+                field.type = prop.type;
+            }
+            editprops.appendChild(field);
+
+            editprops.appendChild(document.createElement('br'));
+
+            prop.element = field;
+        }
+
+        editpropsupdate = document.createElement('button');
+        editpropsupdate.id = 'edit-props-update';
+        appendText(editpropsupdate, 'Update');
+        editpropsupdate.onclick = function () {
+            var i, prop;
+
+            for (i = 0; i < props.length; i++) {
+                prop = props[i];
+                if (prop.type === 'number') {
+                    myRoom.objects[selected][prop.property] = parseInt(prop.element.value);
+                } else if (prop.type !== 'readonly') {
+                    myRoom.objects[selected][prop.property] = prop.element.value;
+                }
+            }
+
+            socket.send(JSON.stringify({
+                type: 'object_update',
+                name: selected,
+                data: myRoom.objects[selected]
+            }));
+        };
+        editprops.appendChild(editpropsupdate);
+
+        editpropsdelete = document.createElement('button');
+        editpropsdelete.id = 'edit-props-delete';
+        appendText(editpropsdelete, 'Delete');
+        editpropsdelete.onclick = function () {
+            objectlist.value = '';
+            editprops.disabled = true;
+
+            socket.send(JSON.stringify({
+                type: 'object_delete',
+                name: selected
+            }));
+        };
+        editprops.appendChild(editpropsdelete);
+    }
+
     function initGUI_topbar() {
         topbuttons = document.createElement('div');
         topbuttons.id = 'top-buttons';
@@ -1098,21 +1325,7 @@
         accountsettingsbutton.disabled = true;
         topbuttons.appendChild(accountsettingsbutton);
 
-        editbutton = document.createElement('button');
-        editbutton.id = 'edit-button';
-        appendText(editbutton, 'Edit objects');
-        editbutton.onclick = function () {
-            editdlg.show();
-        };
-        editbutton.disabled = true;
-        topbuttons.appendChild(editbutton);
-
-        editdlg = makePopup('#edit-dlg', 'Edit objects', true, 300, 300, true, function () {
-            editing = false;
-        }, function () {
-            editing = true;
-        });
-        editdlg.hide();
+        initGUI_editDlg();
 
         accountsettings = makePopup('#account-settings', 'My Account', true, 300, 300, true);
         accountsettings.hide();
@@ -1480,6 +1693,19 @@
                 break;
                 case 'room_change':
                     changeRoom(msg.data);
+                break;
+                case 'object_add':
+                    myRoom.objects[msg.name] = msg.data;
+                    myRoom.objectOrder.push(msg.name);
+                    refreshObjectList();
+                break;
+                case 'object_update':
+                    myRoom.objects[msg.name] = msg.data;
+                break;
+                case 'object_delete':
+                    myRoom.objectOrder.splice(myRoom.objectOrder.indexOf(msg.name), 1);
+                    delete myRoom.objects[msg.name];
+                    refreshObjectList();
                 break;
                 case 'kick_notice':
                     logKickNoticeInChat(msg.mod_nick, msg.mod_special, msg.kickee_nick, msg.kickee_special, msg.reason);
