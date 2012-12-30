@@ -303,6 +303,7 @@ input[type=submit], .button, button {
     bottom: 36px;
     height: 200px;
     padding: 2px;
+    color: black;
 }
 #chatlog.unlocked {
     pointer-events: none;
@@ -346,6 +347,8 @@ input[type=submit], .button, button {
     font-size: 11pt;
     overflow-x: hidden;
     border-radius: 2px;
+}
+#chatlog .chat-line {
     background-color: rgba(255, 255, 255, 0.7);
 }
 .modspeak {
