@@ -433,16 +433,6 @@
     function doMove(x, y) {
         var cur = (new Date().getTime());
         if (cur - lastmove > 400) {
-            console.log(JSON.stringify({
-                me_x: me.x,
-                me_y: me.y,
-                new_me_x: x - cameraX,
-                new_me_y: y - cameraY,
-                x: x,
-                y: y,
-                cameraX: cameraX,
-                cameraY: cameraY
-            }));
             me.x = x - cameraX;
             me.y = y - cameraY;
             pushAndUpdateState(me);
@@ -960,10 +950,6 @@
                 ctx.shadowOffsetY = shadows[i][1];
                 ctx.fillText(nick, 0, vOffset);
             }
-
-            ctx.shadowOffsetX = ctx.shadowOffsetY = 0;
-            ctx.shadowColor = 'transparent';
-            ctx.fillText('(' + user.obj.x + ', ' + user.obj.y + ')', 0, vOffset + 20);
 
             ctx.restore();
         });
