@@ -1233,7 +1233,6 @@
                 case 40:
                     window.clearInterval(moveInterval);
                     moveInterval = null;
-                    doAvatarRevert(true);
                     pushAndUpdateState(me);
                     e.preventDefault();
                     return false;
@@ -1247,8 +1246,6 @@
                 // left
                 case 37:
                     if (!moveInterval) {
-                        doAvatarFlip(false);
-                        doRunningAvatarSwap();
                         moveInterval = window.setInterval(function () {
                             me.x -= 100;
                             pushAndUpdateState(me);
@@ -1261,7 +1258,6 @@
                 // up
                 case 38:
                     if (!moveInterval) {
-                        doFlyingAvatarSwap();
                         moveInterval = window.setInterval(function () {
                             me.y -= 56;
                             pushAndUpdateState(me);
@@ -1274,8 +1270,6 @@
                 // right
                 case 39:
                     if (!moveInterval) {
-                        doAvatarFlip(true);
-                        doRunningAvatarSwap();
                         moveInterval = window.setInterval(function () {
                             me.x += 100;
                             pushAndUpdateState(me);
@@ -1288,7 +1282,6 @@
                 // down
                 case 40:
                     if (!moveInterval) {
-                        doFlyingAvatarSwap();
                         moveInterval = window.setInterval(function () {
                             me.y += 56;
                             pushAndUpdateState(me);
