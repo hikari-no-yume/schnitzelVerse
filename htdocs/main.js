@@ -15,7 +15,7 @@
         worldcanvas, ctx,
         topbuttons,
         editbutton, editdlg,
-        accountsettings, accountsettingsbutton, changepassbutton, rmpassbutton,
+        accountsettings, accountsettingsbutton, changepassbutton, rmpassbutton, sethomebutton,
         bitcount,
         inventorylist, inventorylistbutton,
         friendslist, friendslistbutton,
@@ -423,6 +423,9 @@
 
         // enable edit button
         editbutton.disabled = false;
+
+        // enable set home button
+        sethomebutton.disabled = false;
     }
 
     function doMove(x, y) {
@@ -582,11 +585,11 @@
         icon.src = '/media/icons/house.png';
         icon.className = 'house-link';
         button.appendChild(icon);
-        appendText(button, 'Visit house');
+        appendText(button, 'Go to home');
         button.onclick = function (e) {
             socket.send(JSON.stringify({
-                type: 'room_change',
-                name: 'house ' + profile.nick
+                type: 'home_go',
+                nick: profile.nick
             }));
             popup.hide();
         };
@@ -1067,8 +1070,8 @@
         homebutton.id = 'home-button';
         homebutton.onclick = function () {
             socket.send(JSON.stringify({
-                type: 'room_change',
-                name: 'house ' + myNick
+                type: 'home_go',
+                nick: myNick
             }));
         };
         homebutton.disabled = true;
@@ -1128,6 +1131,17 @@
         };
         friendslistbutton.disabled = true;
         accountsettings.content.appendChild(friendslistbutton);
+
+        sethomebutton = document.createElement('button');
+        sethomebutton.id = 'set-home-button';
+        appendText(sethomebutton, 'Set this room as home');
+        sethomebutton.onclick = function () {
+            socket.send(JSON.stringify({
+                type: 'home_set'
+            }));
+        };
+        sethomebutton.disabled = true;
+        accountsettings.content.appendChild(sethomebutton);
 
         changepassbutton = document.createElement('a');
         changepassbutton.href = 'https://login.persona.org';

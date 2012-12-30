@@ -257,25 +257,11 @@ User.removeFriend = function (nick, friend) {
     this.setUserData(nick, 'friends', friends);
 };
 
-User.getHouse = function (nick) {
-    return this.getUserData(nick, 'house', {
-        type: 'house',
-        name: 'house ' + nick,
-        user_nick: nick,
-        locked: false,
-        background: {
-            data: '/media/rooms/cave.png',
-            width: 960,
-            height: 660,
-            iframe: false
-        }
-    });
+User.getHomeRoom = function (nick) {
+    return this.getUserData(nick, 'home_room', null);
 };
-User.setHouse = function (nick, data) {
-    return this.setUserData(nick, 'house', data);
-};
-User.isHouseLocked = function (nick) {
-    return this.getHouse(nick).locked;
+User.setHomeRoom = function (nick, data) {
+    return this.setUserData(nick, 'home_room', data);
 };
 
 User.getAvatarInventory = function (nick) {

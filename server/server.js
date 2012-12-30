@@ -430,11 +430,7 @@ function handleCommand(cmd, myNick, user) {
                 'Three user commands are available: 1) profile, 2) list, 3) join',
                 "1. profile - Brings up someone's profile, e.g. /profile someguy",
                 '2. list - Lists available rooms, e.g. /list',
-                "3. join - Joins a room, e.g. /join library - if room doesn't exist, an ephemeral room will be created - you can also enter people's houses, e.g. /join house ajf",
-                'Three house commands are available: 1) empty, 2) lock, 3) unlock',
-                '1. empty - Removes everyone else from your house, e.g. /empty',
-                '2. lock - Prevents anyone else from joining your house, e.g. /lock',
-                '3. unlock - Lets other people join your house again, e.g. /unlock'
+                "3. join - Joins a room, e.g. /join library - if room doesn't exist, an ephemeral room will be created - you can also enter people's houses, e.g. /join house ajf"
             ]
         });
         if (isMod) {
@@ -457,16 +453,7 @@ function handleCommand(cmd, myNick, user) {
         var roomName = cmd.substr(5);
 
         if (roomName.indexOf(' ') !== -1) {
-            if (roomName.substr(0, 6) === 'house ') {
-                var houseName = roomName.substr(6);
-                if (User.isHouseLocked(houseName) && myNick !== houseName && !User.isModerator(myNick)) {
-                    sendLine('That house is locked.');
-                } else {
-                    doRoomChange(roomName, user);
-                }
-            } else {
-                sendLine('Room names cannot contain spaces.');
-            }
+            sendLine('Room names cannot contain spaces.');
         } else {
             doRoomChange(roomName, user);
         }
@@ -481,42 +468,6 @@ function handleCommand(cmd, myNick, user) {
             }
         }
         sendLine(roomList.length + ' rooms available: ' + roomNames.join(', '));
-    // empty house
-    } else if (cmd.substr(0, 5) === 'empty') {
-        var count = 0;
-        User.forEach(function (iterUser) {
-            if (iterUser.room === 'house ' + myNick && iterUser.nick !== myNick) {
-                doRoomChange('ponyville', iterUser);
-                sendLine('Removed user with nick: "' + iterUser.nick + '" from your house.');
-                sendLine('The user with nick: "' + myNick + '" removed you from their house.', iterUser.nick);
-                count++;
-            }
-        });
-        if (count) {
-            sendLine('Removed ' + count + ' users from your house.');
-        } else {
-            sendLine('There are no other users in your house.');
-        }
-    // lock house
-    } else if (cmd.substr(0, 4) === 'lock') {
-        var house = User.getHouse(myNick);
-        if (house.locked) {
-            sendLine('Your house is already locked. Use /unlock to unlock it.');
-        } else {
-            house.locked = true;
-            User.setHouse(myNick, house);
-            sendLine('Your house was locked. Use /unlock to unlock it.');
-        }
-    // unlock house
-    } else if (cmd.substr(0, 6) === 'unlock') {
-        var house = User.getHouse(myNick);
-        if (!house.locked) {
-            sendLine('Your house is already unlocked. Use /lock to lock it.');
-        } else {
-            house.locked = false;
-            User.setHouse(myNick, house);
-            sendLine('Your house was unlocked. Use /lock to lock it.');
-        }
     // mod help
     } else if (canMod && cmd.substr(0, 7) === 'modhelp') {
         user.send({
@@ -944,20 +895,26 @@ wsServer.on('request', function(request) {
                 if (msg.name.indexOf(' ') === -1) {
                     doRoomChange(msg.name, user);
                 } else {
-                    if (msg.name.substr(0, 6) === 'house ') {
-                        var houseName = msg.name.substr(6);
-                        if (User.isHouseLocked(houseName) && myNick !== houseName) {
-                            user.send({
-                                type: 'console_msg',
-                                msg: 'That house is locked.'
-                            });
-                        } else {
-                            doRoomChange(msg.name, user);
-                        }
-                    } else {
-                        user.kick('protocol_error');
-                    }
+                    user.kick('protocol_error');
                 }
+            break;
+            case 'home_go':
+                var home = User.getHomeRoom(msg.nick);
+                if (home) {
+                    doRoomChange(home, user);
+                } else {
+                    user.send({
+                        type: 'console_msg',
+                        msg: '"' + msg.nick + '" does not have a home room set'
+                    });
+                }
+            break;
+            case 'home_set':
+                User.setHomeRoom(myNick, user.room);
+                user.send({
+                    type: 'console_msg',
+                    msg: 'Home room set to "' + user.room + '"'
+                });
             break;
             case 'room_list':
                 // tell client about rooms
