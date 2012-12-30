@@ -64,7 +64,7 @@ var fs = require('fs');
 
 function sanitiseChat(chat) {
     chat = chat.substr(0, 100);
-    chat = chat.replace(badRegex, 'pony');
+    chat = chat.replace(badRegex, '$@#%');
     // trim whitespace
     chat = chat.replace(/^\s+|\s+$/g, '');
     return chat;
