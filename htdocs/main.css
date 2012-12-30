@@ -61,10 +61,7 @@ body {
     margin: 0 auto;
     padding: 0;
     border: 0;
-    overflow: hidden
-    transition: transform 0.5s linear, filter 15s ease-in;
-    -webkit-transition: -webkit-transform 0.5s linear, -webkit-filter 15s ease-in;
-    -o-transition: -o-transform 0.5s linear;    
+    overflow: hidden !important;
 }
 
 .upside-down {
