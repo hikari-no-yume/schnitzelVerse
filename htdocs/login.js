@@ -118,7 +118,7 @@
                 onlogin: function (assertion) {
                     window.schnitzelVerse = {
                         assertion: assertion,
-                        mode: 'signup',
+                        mode: 'create',
                         nick: nickname
                     };
                     loadStageTwo();

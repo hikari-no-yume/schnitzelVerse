@@ -1212,6 +1212,14 @@ wsServer.on('request', function(request) {
                     }
                 });
             break;
+            default:
+                connection.sendUTF(JSON.stringify({
+                    type: 'kick',
+                    reason: 'protocol_error'
+                }));
+                connection.close();
+                return;
+            break;
         }
 
         // call onMessage for subsequent messages
