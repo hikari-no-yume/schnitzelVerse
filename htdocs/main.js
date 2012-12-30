@@ -5,6 +5,7 @@
         me, myNick, myRoom = null, myRoomWidth = 0, myRoomHeight = 0, mySpecialStatus, avatarInventory, inventory = [], friends = [],
         blockMovement = false, moveInterval = null, oldImgIndex = 0,
         cameraX = 0, cameraY = 0,
+        editing = false,
         currentUser = null,
         lastmove = (new Date().getTime()),
         globalUserCount = 0, globalModCount = 0,
@@ -13,6 +14,7 @@
     var container,
         worldcanvas, ctx,
         topbuttons,
+        editbutton, editdlg,
         accountsettings, accountsettingsbutton, changepassbutton, rmpassbutton,
         bitcount,
         inventorylist, inventorylistbutton,
@@ -418,6 +420,9 @@
 
         // update URL hash
         window.location.hash = room.name;
+
+        // enable edit button
+        editbutton.disabled = false;
     }
 
     function doMove(x, y) {
@@ -1089,6 +1094,22 @@
         };
         accountsettingsbutton.disabled = true;
         topbuttons.appendChild(accountsettingsbutton);
+
+        editbutton = document.createElement('button');
+        editbutton.id = 'edit-button';
+        appendText(editbutton, 'Edit objects');
+        editbutton.onclick = function () {
+            editdlg.show();
+        };
+        editbutton.disabled = true;
+        topbuttons.appendChild(editbutton);
+
+        editdlg = makePopup('#edit-dlg', 'Edit objects', true, 300, 300, true, function () {
+            editing = false;
+        }, function () {
+            editing = true;
+        });
+        editdlg.hide();
 
         accountsettings = makePopup('#account-settings', 'My Account', true, 300, 300, true);
         accountsettings.hide();

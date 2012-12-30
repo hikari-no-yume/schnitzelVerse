@@ -153,6 +153,11 @@ body {
     height: 160px;
 }
 
+#edit-dlg {
+    width: 280px;
+    height: 320px;
+}
+
 #music {
     position: absolute;
     right: 0;
@@ -172,7 +177,7 @@ input[type=submit], .button, button {
     top: 6px;
 }
 
-#room-list-button, #home-button, #account-settings-button {
+#room-list-button, #home-button, #account-settings-button, #edit-button {
     float: left;
     margin-right: 6px;
     width: auto;
