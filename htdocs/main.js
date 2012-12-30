@@ -143,7 +143,6 @@
             var img, that = this;
 
             if (!this.cache.hasOwnProperty(url)) {
-                console.log("GET - Don't yet have: " + url);
                 img = document.createElement('img');
                 img.src = url;
                 this.cache[url] = null;
@@ -454,20 +453,6 @@
 
         // update object list
         refreshObjectList();
-    }
-
-    function doMove(x, y) {
-        var cur = (new Date().getTime());
-        if (cur - lastmove > 400) {
-            me.x = x - cameraX;
-            me.y = y - cameraY;
-            pushAndUpdateState(me);
-            lastmove = cur;
-        } else {
-            chatPrint(['chatlog'], [
-                ['text', 'You are doing that too often.']
-            ], '');
-        }
     }
 
     function showPMLog(nick) {
@@ -888,14 +873,14 @@
         }
     }
 
-    function refreshObjectList() {
+    function refreshObjectList(makeSelected) {
         var i, option;
 
         objectlist.innerHTML = '';
 
         option = document.createElement('option');
         option.value = '';
-        appendText(option, '');
+        appendText(option, 'Choose an object...');
         objectlist.appendChild(option);
 
         if (myRoom) {
@@ -904,6 +889,11 @@
                 option.value = myRoom.objectOrder[i];
                 appendText(option, myRoom.objectOrder[i]);
                 objectlist.appendChild(option);
+
+                if (myRoom.objectOrder[i] === makeSelected) {
+                    objectlist.selectedIndex = i + 1;
+                    objectlist.onchange();
+                }
             }
         }
     }
@@ -1273,7 +1263,7 @@
         editpropsdelete.id = 'edit-props-delete';
         appendText(editpropsdelete, 'Delete');
         editpropsdelete.onclick = function () {
-            objectlist.value = '';
+            objectlist.selectedIndex = 0;
             editprops.disabled = true;
 
             socket.send(JSON.stringify({
@@ -1408,7 +1398,35 @@
         worldcanvas.width = window.innerWidth;
         worldcanvas.height = window.innerHeight - 36;
         worldcanvas.onclick = function (e) {
-            doMove(e.layerX, e.layerY);
+            var i, object, cur, x, y, x1, x2, y1, y2;
+
+            x = e.x - cameraX;
+            y = e.y - cameraY;
+            if (editing) {
+                for (i = myRoom.objectOrder.length - 1; i >= 0; i--) {
+                    object = myRoom.objects[myRoom.objectOrder[i]];
+                    x1 = object.x - object.width / 2;
+                    x2 = object.x + object.width / 2;
+                    y1 = object.y - object.height / 2;
+                    y2 = object.y + object.height / 2;
+                    if (x1 <= x && x < x2 && y1 <= y && y < y2) {
+                        refreshObjectList(myRoom.objectOrder[i]);
+                        return;
+                    }
+                }
+            } else {
+                cur = (new Date().getTime());
+                if (cur - lastmove > 400) {
+                    me.x = x;
+                    me.y = y;
+                    pushAndUpdateState(me);
+                    lastmove = cur;
+                } else {
+                    chatPrint(['chatlog'], [
+                        ['text', 'You are doing that too often.']
+                    ], '');
+                }
+            }
         };
         container.appendChild(worldcanvas);
 
