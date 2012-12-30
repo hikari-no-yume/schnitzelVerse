@@ -6,7 +6,12 @@
     }
 
     function loadStageTwo() {
-        var script;
+        var script, link;
+
+        link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'main.css';
+        document.body.appendChild(link);
 
         script = document.createElement('script');
         script.src = 'main.js';
@@ -29,7 +34,7 @@
                     stats = JSON.parse(xhr.responseText);
                     div.appendChild(document.createTextNode(stats.clients_connected + ' clients connected'));
                 } else {
-                    div.appendChild('Loading stats failed');
+                    div.appendChild(document.createTextNode('Loading stats failed'));
                 }
             }
         };
@@ -57,7 +62,7 @@
             navigator.id.watch({
                 loggedInUser: null,
                 onlogin: function (assertion) {
-                    window.ponyplace = {
+                    window.schnitzelVerse = {
                         assertion: assertion,
                         mode: 'existing'
                     };
@@ -111,7 +116,7 @@
             navigator.id.watch({
                 loggedInUser: null,
                 onlogin: function (assertion) {
-                    window.ponyplace = {
+                    window.schnitzelVerse = {
                         assertion: assertion,
                         mode: 'signup',
                         nick: nickname
@@ -127,10 +132,17 @@
     }
 
     window.onload = function () {
-        var canvas, ctx, stars, star, i, render, stats, main, formdiv;
+        var canvas, ctx, stars, star, i, render, stats, main, formdiv, nofeature;
 
         main = document.getElementById('main');
         stats = document.getElementById('stats');
+
+        if (!Object.prototype.hasOwnProperty.call(window, 'WebSocket')) {
+            nofeature = document.createElement('p');
+            nofeature.appendChild(document.createTextNode('schnitzelVerse requires WebSocket to work, but your browser does not appear to support it. Use a modern browser like Internet Explorer 10, Mozilla Firefox, Google Chrome, or Safari.'));
+            main.appendChild(nofeature);
+            return;
+        }
 
         canvas = document.createElement('canvas');
         canvas.id = 'bg';
@@ -139,6 +151,12 @@
         document.body.appendChild(canvas);
 
         ctx = canvas.getContext('2d');
+        if (!(canvas.getContext && canvas.getContext('2d'))) {
+            nofeature = document.createElement('p');
+            nofeature.appendChild(document.createTextNode('schnitzelVerse requires HTML5 Canvas support to work, but your browser does not appear to support it. Use a modern browser like Internet Explorer 10, Mozilla Firefox, Google Chrome, or Safari.'));
+            main.appendChild(nofeature);
+            return;
+        }
 
         stars = [];
 
