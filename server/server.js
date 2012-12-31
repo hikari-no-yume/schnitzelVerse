@@ -115,30 +115,53 @@ banManager.init();
 
 var roomManager = {
     rooms: {},
+    roomUserCounts: {},
 
-    init: function () {},
+    init: function () {
+        try {
+            var data = JSON.parse(fs.readFileSync('data/rooms.json'));
+        } catch (e) {
+            console.log('Error loading rooms, skipped');
+            return;
+        }
+        this.rooms = data.rooms;
+        console.log('Loaded rooms');
+    },
+    save: function () {
+        fs.writeFileSync('data/rooms.json', JSON.stringify({
+            rooms: this.rooms
+        }));
+        console.log('Saved rooms');
+    },
     has: function (name) {
         return this.rooms.hasOwnProperty(name);
     },
     get: function (name) {
-        var room = {
+        if (!this.has(name)) {
+            throw new Error('There is no room with the name "' + name + '"');
+        }
+
+        return this.rooms[name];
+    },
+    create: function (name, owner) {
+        this.roomUserCounts[name] = 0;
+        this.rooms[name] = {
+            objects: {},
+            objectOrder: [],
+            owner: owner,
+            publicEdit: false,
             name: name
         };
-
-        if (this.has(name)) {
-            return this.rooms[name];
-        } else {
-            return {
-                name: name
-            };
-        }
-        return room;
+        this.save();
+        return this.rooms[name];
     },
     onLeave: function (name) {
         if (this.rooms.hasOwnProperty(name)) {
-            this.rooms[name].userCount--;
-            if (this.rooms[name].userCount <= 0 && this.rooms[name].objectOrder.length === 0) {
+            this.roomsUserCounts[name]--;
+            if (this.roomUserCounts[name] <= 0 && this.rooms[name].objectOrder.length === 0) {
                 delete this.rooms[name];
+                delete this.roomUserCounts[name];
+                this.save();
             }
         }
     },
@@ -148,7 +171,7 @@ var roomManager = {
             if (this.rooms.hasOwnProperty(name)) {
                 list.push({
                     name: name,
-                    user_count: this.rooms[name].userCount
+                    user_count: this.roomUserCounts[name] || 0
                 });
             }
         }
@@ -157,19 +180,11 @@ var roomManager = {
     doRoomChange: function (roomName, user) {
         var room, oldRoom;
 
-        if (this.rooms.hasOwnProperty(roomName)) {
-            this.rooms[roomName].user_count++;
+        if (this.has(roomName)) {
+            room = this.rooms[roomName];
         } else {
-            this.rooms[roomName] = {
-                objects: {},
-                objectOrder: [],
-                owner: user.nick,
-                publicEdit: false,
-                userCount: 1,
-                name: roomName
-            };
+            room = this.create(roomName, user.nick);
         }
-        room = this.rooms[roomName];
 
         // don't if in null room (lobby)
         if (oldRoom !== null) {
@@ -188,6 +203,9 @@ var roomManager = {
 
         // set current room to new room
         user.room = roomName;
+
+        // increase user count of new room
+        this.roomUserCounts[roomName]++;
 
         // tell client it has changed room and tell room details
         user.send({
@@ -942,6 +960,7 @@ wsServer.on('request', function(request) {
                             var object = sanitiseObject(msg.data, myNick);
                             room.objectOrder.push(msg.name);
                             room.objects[msg.name] = object;
+                            roomManager.save();
 
                             // broadcast new state to other clients in same room
                             User.forEach(function (iterUser) {
@@ -971,6 +990,7 @@ wsServer.on('request', function(request) {
                         if (room.owner === myNick || room.objects[msg.name].owner === myNick || User.isModerator(myNick)) {
                             var object = sanitiseObject(msg.data, myNick);
                             room.objects[msg.name] = object;
+                            roomManager.save();
 
                             // broadcast new state to other clients in same room
                             User.forEach(function (iterUser) {
@@ -1005,6 +1025,7 @@ wsServer.on('request', function(request) {
                         if (room.owner === myNick || room.objects[msg.name].owner === myNick || User.isModerator(myNick)) {
                             room.objectOrder.splice(room.objectOrder.indexOf(msg.name), 1);
                             delete room.objects[msg.name];
+                            roomManager.save();
 
                             // broadcast new state to other clients in same room
                             User.forEach(function (iterUser) {
@@ -1036,6 +1057,7 @@ wsServer.on('request', function(request) {
                     var room = roomManager.get(user.room);
                     if (room.owner === myNick) {
                         room.publicEdit = msg.enabled;
+                        roomManager.save();
                         // broadcast new state to other clients in same room
                         User.forEach(function (iterUser) {
                             if (iterUser.room === user.room) {
