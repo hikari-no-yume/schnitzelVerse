@@ -15,6 +15,7 @@
     var container,
         worldcanvas, ctx,
         topbuttons,
+        roomsettingsbutton, roomsettings, publiceditlabel, publicedit,
         editbutton, editdlg, objectlist, newobjectbtn, editprops, editpropshead, editpropsupdate, editpropsdelete,
         accountsettings, accountsettingsbutton, changepassbutton, rmpassbutton, sethomebutton,
         bitcount,
@@ -127,6 +128,7 @@
             var str;
             if (myRoom !== null) {
                 str = myRoom.name;
+                str += ' (owned by "' + myRoom.owner + '" - public editing ' + (myRoom.publicEdit ? 'enabled' : 'disabled') + ')';
                 str += ' - ' + this.userCount + '/' + globalUserCount + ' users';
             } else {
                 str = globalUserCount + ' users online';
@@ -445,8 +447,32 @@
         // update URL hash
         window.location.hash = room.name;
 
-        // enable edit button
-        editbutton.disabled = false;
+        // check if I own this room
+        if (room.owner === myNick) {
+            // enable room settings
+            roomsettingsbutton.disabled = false;
+
+            // update checkbox value
+            publicedit.checked = room.publicEdit;
+        } else {
+            // disable room settings
+            roomsettingsbutton.disabled = true;
+
+            // hide room settings dialog
+            roomsettings.hide();
+        }
+
+        // check if I can edit
+        if (room.owner === myNick || amModerator() || room.publicEdit) {
+            // enable edit button
+            editbutton.disabled = false;
+        } else {
+            // disable edit button
+            editbutton.disabled = true;
+
+            // hide edit dialog
+            editdlg.hide();
+        }
 
         // enable set home button
         sethomebutton.disabled = false;
@@ -1155,6 +1181,32 @@
         editbutton.disabled = true;
         topbuttons.appendChild(editbutton);
 
+        roomsettingsbutton = document.createElement('button');
+        roomsettingsbutton.id = 'room-settings-button';
+        appendText(roomsettingsbutton, 'Room settings');
+        roomsettingsbutton.onclick = function () {
+            roomsettings.show();
+        };
+        roomsettingsbutton.disabled = true;
+        topbuttons.appendChild(roomsettingsbutton);
+
+        roomsettings = makePopup('#room-settings', 'Room settings', true, 300, 300, true);
+        roomsettings.hide();
+
+        publiceditlabel = document.createElement('label');
+        roomsettings.content.appendChild(publiceditlabel);
+
+        publicedit = document.createElement('input');
+        publicedit.type = 'checkbox';
+        publicedit.onchange = function () {
+            socket.send(JSON.stringify({
+                type: 'room_setpublicedit',
+                enabled: publicedit.checked
+            }));
+        };
+        publiceditlabel.appendChild(publicedit);
+        appendText(publiceditlabel, ' enable public editing (other users can create objects)');
+
         editdlg = makePopup('#edit-dlg', 'Edit objects', true, 300, 300, true, function () {
             editing = false;
         }, function () {
@@ -1168,7 +1220,7 @@
             var i, prop;
             if (objectlist.value) {
                 selected = objectlist.value;
-                if (myRoom.objects[selected].owner === myNick || amModerator()) {
+                if (myRoom.owner === myNick || myRoom.objects[selected].owner === myNick || amModerator()) {
                     editprops.disabled = false;
                 } else {
                     editprops.disabled = true;
@@ -1724,6 +1776,21 @@
                     myRoom.objectOrder.splice(myRoom.objectOrder.indexOf(msg.name), 1);
                     delete myRoom.objects[msg.name];
                     refreshObjectList();
+                break;
+                case 'room_setpublicedit':
+                    myRoom.publicEdit = msg.enabled;
+                    userManager.updateCounter();
+                    // check if I own this room or I'm a mod
+                    if (myRoom.owner === myNick || amModerator() || myRoom.publicEdit) {
+                        // enable edit button
+                        editbutton.disabled = false;
+                    } else {
+                        // disable edit button
+                        editbutton.disabled = true;
+
+                        // hide edit dialog
+                        editdlg.hide();
+                    }
                 break;
                 case 'kick_notice':
                     logKickNoticeInChat(msg.mod_nick, msg.mod_special, msg.kickee_nick, msg.kickee_special, msg.reason);

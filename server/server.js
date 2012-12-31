@@ -126,29 +126,18 @@ var roomManager = {
         };
 
         if (this.has(name)) {
-            room.objects = this.rooms[name].objects;
-            room.objectOrder = this.rooms[name].objectOrder;
+            return this.rooms[name];
         } else {
-            room.objects = {};
-            room.objectOrder = [];
+            return {
+                name: name
+            };
         }
         return room;
     },
-    onJoin: function (name) {
-        if (this.rooms.hasOwnProperty(name)) {
-            this.rooms[name].user_count++;
-        } else {
-            this.rooms[name] = {
-                objects: {},
-                objectOrder: [],
-                user_count: 1
-            };
-        }
-    },
     onLeave: function (name) {
         if (this.rooms.hasOwnProperty(name)) {
-            this.rooms[name].user_count--;
-            if (this.rooms[name].user_count <= 0 && this.rooms[name].objectOrder.length === 0) {
+            this.rooms[name].userCount--;
+            if (this.rooms[name].userCount <= 0 && this.rooms[name].objectOrder.length === 0) {
                 delete this.rooms[name];
             }
         }
@@ -159,11 +148,83 @@ var roomManager = {
             if (this.rooms.hasOwnProperty(name)) {
                 list.push({
                     name: name,
-                    user_count: this.rooms[name].user_count
+                    user_count: this.rooms[name].userCount
                 });
             }
         }
         return list;
+    },
+    doRoomChange: function (roomName, user) {
+        var room, oldRoom;
+
+        if (this.rooms.hasOwnProperty(roomName)) {
+            this.rooms[roomName].user_count++;
+        } else {
+            this.rooms[roomName] = {
+                objects: {},
+                objectOrder: [],
+                owner: user.nick,
+                publicEdit: false,
+                userCount: 1,
+                name: roomName
+            };
+        }
+        room = this.rooms[roomName];
+
+        // don't if in null room (lobby)
+        if (oldRoom !== null) {
+            // tell clients in old room that client has left
+            User.forEach(function (iterUser) {
+                if (iterUser.room === oldRoom && iterUser.nick !== user.nick) {
+                    iterUser.send({
+                        type: 'die',
+                        nick: user.nick
+                    });
+                }
+            });
+            // decrease user count of old room
+            roomManager.onLeave(oldRoom);
+        }
+
+        // set current room to new room
+        user.room = roomName;
+
+        // tell client it has changed room and tell room details
+        user.send({
+            type: 'room_change',
+            data: room
+        });
+
+        User.forEach(function (iterUser) {
+            if (iterUser.room === user.room) {
+                if (iterUser.nick !== user.nick) {
+                    // tell client about other clients in room
+                    user.send({
+                        type: 'appear',
+                        obj: iterUser.obj,
+                        nick: iterUser.nick,
+                        special: iterUser.special,
+                        joining: false
+                    });
+                    // tell other clients in room about client
+                    iterUser.send({
+                        type: 'appear',
+                        obj: user.obj,
+                        nick: user.nick,
+                        special: user.special,
+                        joining: true
+                    });
+                }
+            }
+        });
+
+        // tell client about room list & user count
+        user.send({
+            type: 'room_list',
+            list: this.getList(),
+            user_count: User.userCount,
+            mod_count: User.modCount
+        });
     }
 };
 
@@ -356,69 +417,6 @@ var modMessages = {
 
 modMessages.init();
 
-function doRoomChange(roomName, user) {
-    var room = roomManager.get(roomName);
-    var oldRoom = user.room;
-
-    // don't if in null room (lobby)
-    if (oldRoom !== null) {
-        // tell clients in old room that client has left
-        User.forEach(function (iterUser) {
-            if (iterUser.room === oldRoom && iterUser.nick !== user.nick) {
-                iterUser.send({
-                    type: 'die',
-                    nick: user.nick
-                });
-            }
-        });
-        // decrease user count of old room
-        roomManager.onLeave(oldRoom);
-    }
-
-    // set current room to new room
-    user.room = room.name;
-
-    // tell client it has changed room and tell room details
-    user.send({
-        type: 'room_change',
-        data: room
-    });
-
-    User.forEach(function (iterUser) {
-        if (iterUser.room === user.room) {
-            if (iterUser.nick !== user.nick) {
-                // tell client about other clients in room
-                user.send({
-                    type: 'appear',
-                    obj: iterUser.obj,
-                    nick: iterUser.nick,
-                    special: iterUser.special,
-                    joining: false
-                });
-                // tell other clients in room about client
-                iterUser.send({
-                    type: 'appear',
-                    obj: user.obj,
-                    nick: user.nick,
-                    special: user.special,
-                    joining: true
-                });
-            }
-        }
-    });
-
-    // increase user count of new room
-    roomManager.onJoin(room.name);
-
-    // tell client about room list & user count
-    user.send({
-        type: 'room_list',
-        list: roomManager.getList(),
-        user_count: User.userCount,
-        mod_count: User.modCount
-    });
-}
-
 function handleCommand(cmd, myNick, user) {
     function sendLine(line, nick) {
         nick = nick || myNick;
@@ -470,7 +468,7 @@ function handleCommand(cmd, myNick, user) {
         if (roomName.indexOf(' ') !== -1) {
             sendLine('Room names cannot contain spaces.');
         } else {
-            doRoomChange(roomName, user);
+            roomManager.doRoomChange(roomName, user);
         }
     // list rooms
     } else if (cmd.substr(0, 4) === 'list') {
@@ -655,7 +653,7 @@ function handleCommand(cmd, myNick, user) {
                 return;
             }
             modLogger.logMove(myNick, movee, User.get(movee).room, room, User.get(movee).obj);
-            doRoomChange(room, User.get(movee));
+            roomManager.doRoomChange(room, User.get(movee));
             sendLine('You were forcibly moved room by ' + myNick, movee);
         } else {
             sendLine('/move takes a room and a nickname');
@@ -908,7 +906,7 @@ wsServer.on('request', function(request) {
             break;
             case 'room_change':
                 if (msg.name.indexOf(' ') === -1) {
-                    doRoomChange(msg.name, user);
+                    roomManager.doRoomChange(msg.name, user);
                 } else {
                     user.kick('protocol_error');
                 }
@@ -916,7 +914,7 @@ wsServer.on('request', function(request) {
             case 'home_go':
                 var home = User.getHomeRoom(msg.nick);
                 if (home) {
-                    doRoomChange(home, user);
+                    roomManager.doRoomChange(home, user);
                 } else {
                     user.send({
                         type: 'console_msg',
@@ -934,25 +932,32 @@ wsServer.on('request', function(request) {
             case 'object_add':
                 if (user.room) {
                     var room = roomManager.get(user.room);
-                    if (room.objects.hasOwnProperty(msg.name)) {
+                    if (room.owner === myNick || User.isModerator(myNick) || room.publicEdit) {
+                        if (room.objects.hasOwnProperty(msg.name)) {
+                            user.send({
+                                type: 'console_msg',
+                                msg: 'There is already an object named "' + msg.name + '"'
+                            });
+                        } else {
+                            var object = sanitiseObject(msg.data, myNick);
+                            room.objectOrder.push(msg.name);
+                            room.objects[msg.name] = object;
+
+                            // broadcast new state to other clients in same room
+                            User.forEach(function (iterUser) {
+                                if (iterUser.room === user.room) {
+                                    iterUser.send({
+                                        type: 'object_add',
+                                        data: object,
+                                        name: msg.name
+                                    });
+                                }
+                            });
+                        }
+                    } else {
                         user.send({
                             type: 'console_msg',
-                            msg: 'There is already an object named "' + msg.name + '"'
-                        });
-                    } else {
-                        var object = sanitiseObject(msg.data, myNick);
-                        room.objectOrder.push(msg.name);
-                        room.objects[msg.name] = object;
-
-                        // broadcast new state to other clients in same room
-                        User.forEach(function (iterUser) {
-                            if (iterUser.room === user.room) {
-                                iterUser.send({
-                                    type: 'object_add',
-                                    data: object,
-                                    name: msg.name
-                                });
-                            }
+                            msg: 'You do not have permission to create objects in this room'
                         });
                     }
                 } else {
@@ -963,7 +968,7 @@ wsServer.on('request', function(request) {
                 if (user.room) {
                     var room = roomManager.get(user.room);
                     if (room.objects.hasOwnProperty(msg.name)) {
-                        if (room.objects[msg.name].owner === myNick || User.isModerator(myNick)) {
+                        if (room.owner === myNick || room.objects[msg.name].owner === myNick || User.isModerator(myNick)) {
                             var object = sanitiseObject(msg.data, myNick);
                             room.objects[msg.name] = object;
 
@@ -997,7 +1002,7 @@ wsServer.on('request', function(request) {
                 if (user.room) {
                     var room = roomManager.get(user.room);
                     if (room.objects.hasOwnProperty(msg.name)) {
-                        if (room.objects[msg.name].owner === myNick || User.isModerator(myNick)) {
+                        if (room.owner === myNick || room.objects[msg.name].owner === myNick || User.isModerator(myNick)) {
                             room.objectOrder.splice(room.objectOrder.indexOf(msg.name), 1);
                             delete room.objects[msg.name];
 
@@ -1020,6 +1025,34 @@ wsServer.on('request', function(request) {
                         user.send({
                             type: 'console_msg',
                             msg: 'There is no object named "' + msg.name + '"'
+                        });
+                    }
+                } else {
+                    user.kick('protocol_error');
+                }
+            break;
+            case 'room_setpublicedit':
+                if (user.room) {
+                    var room = roomManager.get(user.room);
+                    if (room.owner === myNick) {
+                        room.publicEdit = msg.enabled;
+                        // broadcast new state to other clients in same room
+                        User.forEach(function (iterUser) {
+                            if (iterUser.room === user.room) {
+                                iterUser.send({
+                                    type: 'room_setpublicedit',
+                                    enabled: room.publicEdit
+                                });
+                                iterUser.send({
+                                    type: 'console_msg',
+                                    msg: 'Public editing ' + (room.publicEdit ? 'enabled' : 'disabled')
+                                });
+                            }
+                        });
+                    } else {
+                        user.send({
+                            type: 'console_msg',
+                            msg: 'The room "' + room.name + '" does not belong to you'
                         });
                     }
                 } else {

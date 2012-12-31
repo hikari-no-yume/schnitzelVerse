@@ -153,9 +153,14 @@ body {
     height: 160px;
 }
 
+#room-settings {
+    width: 280px;
+    height: 100px;
+}
+
 #edit-dlg {
     width: 280px;
-    height: 320px;
+    height: 400px;
 }
 
 #music {
