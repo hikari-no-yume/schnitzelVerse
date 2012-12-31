@@ -118,13 +118,18 @@ var roomManager = {
     roomUserCounts: {},
 
     init: function () {
+        var data, that = this;
+
         try {
-            var data = JSON.parse(fs.readFileSync('data/rooms.json'));
+            data = JSON.parse(fs.readFileSync('data/rooms.json'));
         } catch (e) {
             console.log('Error loading rooms, skipped');
             return;
         }
         this.rooms = data.rooms;
+        Object.keys(this.rooms).forEach(function (roomName) {
+            that.roomUserCounts[roomName] = 0;
+        });
         console.log('Loaded rooms');
     },
     save: function () {
