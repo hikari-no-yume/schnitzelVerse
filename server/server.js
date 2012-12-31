@@ -127,9 +127,6 @@ var roomManager = {
             return;
         }
         this.rooms = data.rooms;
-        Object.keys(this.rooms).forEach(function (roomName) {
-            that.roomUserCounts[roomName] = 0;
-        });
         console.log('Loaded rooms');
     },
     save: function () {
@@ -148,8 +145,28 @@ var roomManager = {
 
         return this.rooms[name];
     },
+    getUserCount: function (name) {
+        if (this.roomUserCounts.hasOwnProperty(name)) {
+            return this.roomUserCounts[name];
+        } else {
+            return 0;
+        }
+    },
+    setUserCount: function (name, value) {
+        if (value) {
+            this.roomUserCounts[name] = value;
+        } else {
+            delete this.roomUserCounts[name];
+        }
+    },
+    incrementUserCount: function (name) {
+        this.setUserCount(name, this.getUserCount(name) + 1);
+    },
+    decrementUserCount: function (name) {
+        this.setUserCount(name, this.getUserCount(name) - 1);
+    },
     create: function (name, owner) {
-        this.roomUserCounts[name] = 0;
+        this.setUserCount(name, 0);
         this.rooms[name] = {
             objects: {},
             objectOrder: [],
@@ -162,10 +179,9 @@ var roomManager = {
     },
     onLeave: function (name) {
         if (this.rooms.hasOwnProperty(name)) {
-            this.roomsUserCounts[name]--;
-            if (this.roomUserCounts[name] <= 0 && this.rooms[name].objectOrder.length === 0) {
+            this.decrementUserCount(name);
+            if (this.getUserCount(name) <= 0 && this.rooms[name].objectOrder.length === 0) {
                 delete this.rooms[name];
-                delete this.roomUserCounts[name];
                 this.save();
             }
         }
@@ -176,7 +192,7 @@ var roomManager = {
             if (this.rooms.hasOwnProperty(name)) {
                 list.push({
                     name: name,
-                    user_count: this.roomUserCounts[name] || 0
+                    user_count: this.getUserCount(name)
                 });
             }
         }
@@ -191,6 +207,8 @@ var roomManager = {
             room = this.create(roomName, user.nick);
         }
 
+        oldRoom = user.room;
+
         // don't if in null room (lobby)
         if (oldRoom !== null) {
             // tell clients in old room that client has left
@@ -203,14 +221,14 @@ var roomManager = {
                 }
             });
             // decrease user count of old room
-            roomManager.onLeave(oldRoom);
+            this.onLeave(oldRoom);
         }
 
         // set current room to new room
         user.room = roomName;
 
         // increase user count of new room
-        this.roomUserCounts[roomName]++;
+        this.incrementUserCount(roomName);
 
         // tell client it has changed room and tell room details
         user.send({
