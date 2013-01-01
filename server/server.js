@@ -70,11 +70,6 @@ function sanitiseChat(chat) {
     return chat;
 }
 
-function sanitiseObject(obj, nick) {
-    obj.owner = nick;
-    return obj;
-}
-
 var banManager = {
     bannedIPs: [],
 
@@ -266,6 +261,79 @@ var roomManager = {
             user_count: User.userCount,
             mod_count: User.modCount
         });
+    },
+    sanitiseObject: function sanitiseObject(obj, nick) {
+        obj.owner = nick;
+        return obj;
+    },
+    hasObject: function (roomName, objectName) {
+        var room = this.get(roomName);
+
+        return room.objects.hasOwnProperty(objectName);
+    },
+    addObject: function (roomName, owner, objectName, object) {
+        var room = this.get(roomName);
+
+        object = this.sanitiseObject(object, owner);
+        room.objectOrder.push(objectName);
+        room.objects[objectName] = object;
+        this.save();
+
+        // broadcast new state to other clients in same room
+        User.forEach(function (iterUser) {
+            if (iterUser.room === roomName) {
+                iterUser.send({
+                    type: 'object_add',
+                    data: object,
+                    name: objectName
+                });
+            }
+        });
+    },
+    updateObject: function (roomName, objectName, object) {
+        var room = this.get(roomName);
+
+        object = this.sanitiseObject(object, room.objects[objectName].owner);
+        room.objects[objectName] = object;
+        this.save();
+
+        // broadcast new state to other clients in same room
+        User.forEach(function (iterUser) {
+            if (iterUser.room === roomName) {
+                iterUser.send({
+                    type: 'object_update',
+                    data: object,
+                    name: objectName
+                });
+            }
+        });
+    },
+    deleteObject: function (roomName, objectName) {
+        var room = this.get(roomName);
+
+        room.objectOrder.splice(room.objectOrder.indexOf(objectName), 1);
+        delete room.objects[objectName];
+        this.save();
+
+        // broadcast new state to other clients in same room
+        User.forEach(function (iterUser) {
+            if (iterUser.room === roomName) {
+                iterUser.send({
+                    type: 'object_delete',
+                    name: objectName
+                });
+            }
+        });
+    },
+    canCreateObject: function (roomName, nick) {
+        var room = this.get(roomName);
+
+        return (room.owner === nick || User.isModerator(nick) || room.publicEdit);
+    },
+    canEditObject: function (roomName, nick, objectName) {
+        var room = this.get(roomName), object = room.objects[objectName];
+
+        return (room.owner === nick || object.owner === nick || User.isModerator(nick));
     }
 };
 
@@ -972,29 +1040,14 @@ wsServer.on('request', function(request) {
             break;
             case 'object_add':
                 if (user.room) {
-                    var room = roomManager.get(user.room);
-                    if (room.owner === myNick || User.isModerator(myNick) || room.publicEdit) {
-                        if (room.objects.hasOwnProperty(msg.name)) {
+                    if (roomManager.canCreateObject(user.room, myNick)) {
+                        if (roomManager.hasObject(user.room, msg.name)) {
                             user.send({
                                 type: 'console_msg',
                                 msg: 'There is already an object named "' + msg.name + '"'
                             });
                         } else {
-                            var object = sanitiseObject(msg.data, myNick);
-                            room.objectOrder.push(msg.name);
-                            room.objects[msg.name] = object;
-                            roomManager.save();
-
-                            // broadcast new state to other clients in same room
-                            User.forEach(function (iterUser) {
-                                if (iterUser.room === user.room) {
-                                    iterUser.send({
-                                        type: 'object_add',
-                                        data: object,
-                                        name: msg.name
-                                    });
-                                }
-                            });
+                            roomManager.addObject(user.room, myNick, msg.name, msg.data);
                         }
                     } else {
                         user.send({
@@ -1008,27 +1061,13 @@ wsServer.on('request', function(request) {
             break;
             case 'object_update':
                 if (user.room) {
-                    var room = roomManager.get(user.room);
-                    if (room.objects.hasOwnProperty(msg.name)) {
-                        if (room.owner === myNick || room.objects[msg.name].owner === myNick || User.isModerator(myNick)) {
-                            var object = sanitiseObject(msg.data, myNick);
-                            room.objects[msg.name] = object;
-                            roomManager.save();
-
-                            // broadcast new state to other clients in same room
-                            User.forEach(function (iterUser) {
-                                if (iterUser.room === user.room) {
-                                    iterUser.send({
-                                        type: 'object_update',
-                                        data: object,
-                                        name: msg.name
-                                    });
-                                }
-                            });
+                    if (roomManager.hasObject(user.room, msg.name)) {
+                        if (roomManager.canEditObject(user.room, myNick, msg.name)) {
+                            roomManager.updateObject(user.room, msg.name, msg.data);
                         } else {
                             user.send({
                                 type: 'console_msg',
-                                msg: 'The object "' + msg.name + '" does not belong to you'
+                                msg: 'You do not have permission to edit the object "' + msg.name + '"'
                             });
                         }
                     } else {
@@ -1044,25 +1083,13 @@ wsServer.on('request', function(request) {
             case 'object_delete':
                 if (user.room) {
                     var room = roomManager.get(user.room);
-                    if (room.objects.hasOwnProperty(msg.name)) {
-                        if (room.owner === myNick || room.objects[msg.name].owner === myNick || User.isModerator(myNick)) {
-                            room.objectOrder.splice(room.objectOrder.indexOf(msg.name), 1);
-                            delete room.objects[msg.name];
-                            roomManager.save();
-
-                            // broadcast new state to other clients in same room
-                            User.forEach(function (iterUser) {
-                                if (iterUser.room === user.room) {
-                                    iterUser.send({
-                                        type: 'object_delete',
-                                        name: msg.name
-                                    });
-                                }
-                            });
+                    if (roomManager.hasObject(user.room, msg.name)) {
+                        if (roomManager.canEditObject(user.room, myNick, msg.name)) {
+                            roomManager.deleteObject(user.room, msg.name);
                         } else {
                             user.send({
                                 type: 'console_msg',
-                                msg: 'The object "' + msg.name + '" does not belong to you'
+                                msg: 'You do not have permission to edit the object "' + msg.name + '"'
                             });
                         }
                     } else {
