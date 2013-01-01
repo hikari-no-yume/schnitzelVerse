@@ -1,7 +1,7 @@
 LICENSE
 =======
 
-Code except where otherwise noted © 2012 Andrew Faulds.
+Code except where otherwise noted © 2012-2013 Andrew Faulds.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
