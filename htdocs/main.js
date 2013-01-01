@@ -396,13 +396,11 @@
         };
         roomlist.content.appendChild(newbtn);
 
+        var outer = document.createElement('ul');
         for (var i = 0; i < rooms.length; i++) {
             var data = rooms[i];
             var item = document.createElement('li');
-            var title = document.createElement('div');
-            title.className = 'room-title';
-            appendText(title, '"' + data.name + '" (' + data.user_count + ' users)');
-            item.appendChild(title);
+            appendText(item, '"' + data.name + '" (' + data.user_count + ' users)');
             
             (function (name) {
                 item.onclick = function () {
@@ -414,8 +412,9 @@
                 };
             }(data.name));
             
-            roomlist.content.appendChild(item);
+            outer.appendChild(item);
         }
+        roomlist.content.appendChild(outer);
 
         // show list button
         roomlistbutton.disabled = false;
@@ -1421,6 +1420,7 @@
             }
         };
         accountsettings.content.appendChild(rmpassbutton);
+
 
         inventorylist = makePopup('.chooser', 'Item inventory', true, 200, 200, true, null, function () {
             renderInventoryList();
