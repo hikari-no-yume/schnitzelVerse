@@ -2,7 +2,7 @@
     'use strict';
 
     var socket, connected = false, connecting = false, ignoreDisconnect = false, pageFocussed = false, unseenHighlights = 0,
-        me, myNick, myRoom = null, mySpecialStatus, avatarInventory, inventory = [], friends = [],
+        me, myNick, myRoom = null, mySpecialStatus, inventory = [], friends = [],
         roomObjects = {}, roomObjectOrder = [],
         blockMovement = false, moveInterval = null, oldImgIndex = 0,
         cameraX = 0, cameraY = 0,
@@ -418,13 +418,6 @@
 
         // show list button
         roomlistbutton.disabled = false;
-    }
-
-    function haveAvatar (name) {
-        return (avatarInventory.indexOf(name) !== -1);
-    }
-    function haveInventoryItem (name) {
-        return (inventory.indexOf(name) !== -1);
     }
 
     function changeRoom(room) {
@@ -888,11 +881,18 @@
     }
 
     function renderInventoryList() {
+        var i, item, elem, list;
+
         inventorylist.content.innerHTML = '';
         if (inventory.length) {
+            list = document.createElement('ul');
             for (var i = 0; i < inventory.length; i++) {
-                var name = inventory[i];
+                item = inventory[i];
+                elem = document.createElement('li');
+                appendText(elem, item.type);
+                list.appendChild(elem);
             }
+            inventorylist.content.appendChild(list);
         } else {
             appendText(inventorylist.content, 'You have no inventory items.');
         }
@@ -1647,7 +1647,6 @@
                     if (msg.bits !== null) {
                         appendText(bitcount, msg.bits);
                     }
-                    avatarInventory = msg.avatar_inventory;
                     inventory = msg.inventory;
                     friends = msg.friends;
                     accountsettingsbutton.disabled = false;

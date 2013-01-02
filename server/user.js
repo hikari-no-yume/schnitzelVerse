@@ -26,7 +26,6 @@ User.prototype.sendAccountState = function () {
         nick: this.nick,
         special: User.getSpecialStatus(this.nick),
         bits: User.hasBits(this.nick),
-        avatar_inventory: User.getAvatarInventory(this.nick),
         inventory: User.getInventory(this.nick),
         friends: User.getFriends(this.nick)
     });
@@ -264,19 +263,6 @@ User.setHomeRoom = function (nick, data) {
     return this.setUserData(nick, 'home_room', data);
 };
 
-User.getAvatarInventory = function (nick) {
-    return this.getUserData(nick, 'avatarInventory', ['derpy', 'applejack', 'fluttershy', 'pinkiepie', 'rainbowdash', 'rarity', 'twilight']);
-};
-User.hasAvatar = function (nick, avatar) {
-    return this.getAvatarInventory(nick).indexOf(avatar) !== -1;
-};
-User.giveAvatar = function (nick, avatar) {
-    var inventory = this.getAvatarInventory(nick);
-    if (inventory.indexOf(avatar) === -1) {
-        inventory.push(avatar);
-    }
-    this.setUserData(nick, 'avatarInventory', inventory);
-};
 User.getInventory = function (nick) {
     return this.getUserData(nick, 'inventory', []);
 };
