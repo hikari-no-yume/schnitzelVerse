@@ -271,6 +271,23 @@ User.giveInventoryItem = function (nick, item) {
     inventory.push(item);
     this.setUserData(nick, 'inventory', inventory);
 };
+User.getInventoryItem = function (nick, itemID) {
+    var inventory = this.getInventory(nick);
+    if (inventory.hasOwnProperty(itemID)) {
+        return inventory[itemID];
+    } else {
+        return null;
+    }
+};
+User.removeInventoryItem = function (nick, itemID) {
+    var inventory = this.getInventory(nick);
+    if (inventory.hasOwnProperty(itemID)) {
+        inventory.splice(itemID, 1);
+        this.save();
+    } else {
+        throw new Error('User "' + nick + '" has no item with ID "' + itemID + '"');
+    }
+};
 
 User.get = function (nick) {
     if(!this.has(nick)) {

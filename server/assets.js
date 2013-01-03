@@ -20,7 +20,7 @@ var Assets = {
     has: function (id) {
         return this.assets.hasOwnProperty(id);
     },
-    add: function (path, description, type, size, hash, callback) {
+    add: function (owner, path, description, type, size, hash, callback) {
         var filename, file1, file2, that = this;
 
         // prevent duplicates
@@ -52,7 +52,8 @@ var Assets = {
             desc: description,
             type: type,
             size: size,
-            hash: hash
+            hash: hash,
+            owner: owner
         };
         file1 = fs.createReadStream(path);
         file2 = fs.createWriteStream(filename);
@@ -63,12 +64,33 @@ var Assets = {
             callback(hash);
         });
     },
+    delete: function (id, callback) {
+        var asset, that = this;
+
+        if (!this.has(id)) {
+            throw new Error('No such asset: ' + id);
+        }
+        asset = this.get(id);
+        fs.unlink(asset.path, function (err) {
+            if (!err) {
+                delete that.assets[id];
+                that.save();
+                callback(true);
+            } else {
+                callback(false);
+            }
+        });
+    },
     get: function (id) {
         if (!this.has(id)) {
-            console.log("Didn't have " + id);
             return null;
         }
         return this.assets[id];
+    },
+    canDelete: function (assetID, nick) {
+        var asset = this.get(assetID);
+
+        return (asset.owner === nick || User.isModerator(nick));
     }
 };
 

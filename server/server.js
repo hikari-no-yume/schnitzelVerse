@@ -12,7 +12,7 @@ var User = require('./user.js'),
     constants = require('./constants.js');
 
 var server = http.createServer(function(request, response) {
-    var headers, form, htmlhead, goback, file, parts, asset;
+    var headers, form, htmlhead, goback, file, parts, asset, myNick;
 
     console.log((new Date()) + ' Received request for ' + request.url);
 
@@ -55,7 +55,8 @@ var server = http.createServer(function(request, response) {
                 response.end(htmlhead + 'Your IP address or nickname do not match with logged in users.');
                 return;
             }
-            goback = '<br>\n<a href=/upload?nickname=' + fields.nickname + '>Go back</a>';
+            myNick = fields.nickname;
+            goback = '<br>\n<a href=/upload?nickname=' + myNick + '>Go back</a>';
             file = files.file;
             if (!fields.desc) {
                 response.writeHead(200, headers);
@@ -79,9 +80,9 @@ var server = http.createServer(function(request, response) {
                 fs.unlink(file.path);
                 return;
             }
-            Assets.add(file.path, fields.desc, file.type, file.size, file.hash, function (assetID) {
+            Assets.add(myNick, file.path, fields.desc, file.type, file.size, file.hash, function (assetID) {
                 if (assetID) {
-                    User.giveInventoryItem(fields.nickname, {
+                    User.giveInventoryItem(myNick, {
                         type: 'asset',
                         data: {
                             id: assetID,
@@ -987,6 +988,47 @@ wsServer.on('request', function(request) {
                     }
                 } else {
                     user.kick('protocol_error');
+                }
+            break;
+            case 'asset_delete':
+                if (Assets.has(msg.id)) {
+                    if (Assets.canDelete(msg.id, myNick)) {
+                        Assets.delete(msg.id, function (success) {
+                            var item;
+
+                            if (success) {
+                                item = User.getInventoryItem(myNick, msg.itemID);
+                                if (item && item.type === 'asset' && item.data.id === msg.id) {
+                                    User.removeInventoryItem(myNick, msg.itemID);
+                                    user.sendAccountState();
+                                    user.send({
+                                        type: 'console_msg',
+                                        msg: 'Asset deleted.'
+                                    });
+                                } else {
+                                    user.send({
+                                        type: 'console_msg',
+                                        msg: 'Error while removing asset from inventory. Asset was deleted.'
+                                    });
+                                }
+                            } else {
+                                user.send({
+                                    type: 'console_msg',
+                                    msg: 'Error while deleting asset.'
+                                });
+                            }
+                        });
+                    } else {
+                        user.send({
+                            type: 'console_msg',
+                            msg: 'You do not have permission to delete the asset with ID "' + msg.id + '"'
+                        });
+                    }
+                } else {
+                    user.send({
+                        type: 'console_msg',
+                        msg: 'There is no asset with the ID "' + msg.id + '"'
+                    });
                 }
             break;
             case 'room_list':

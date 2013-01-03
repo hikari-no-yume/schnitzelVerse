@@ -893,6 +893,30 @@
                 elem = document.createElement('li');
                 if (item.type === 'asset') {
                     appendText(elem, 'Asset - ' + item.data.type + ' - Description: "' + item.data.desc + '" - ID ' + item.data.id);
+                    (function (assetID, itemID) {
+                        var btn;
+
+                        btn = document.createElement('button');
+                        appendText(btn, 'Set as avatar');
+                        btn.onclick = function () {
+                            me.img = assetID;
+                            pushAndUpdateState(me);
+                        };
+                        elem.appendChild(btn);
+
+                        btn = document.createElement('button');
+                        appendText(btn, 'Delete asset');
+                        btn.onclick = function () {
+                            if (confirm('Are you sure you want to delete this asset? Once it is deleted, any objects using it may not show up correctly.')) {
+                                socket.send(JSON.stringify({
+                                    type: 'asset_delete',
+                                    id: assetID,
+                                    itemID: itemID
+                                }));
+                            }
+                        };
+                        elem.appendChild(btn);
+                    }(item.data.id, i));
                 } else {
                     appendText(elem, 'Unknown item type: ' + item.type);
                 }
@@ -980,6 +1004,24 @@
         popup.content.appendChild(ul);
     }
 
+    function limitAvatarSize(width, height) {
+        if (width > height) {
+            if (width > 150) {
+                height = height * (150/width);
+                width = 150;
+            }
+        } else {
+            if (height > 150) {
+                width = width * (150/height);
+                height = 150;
+            }
+        }
+        return {
+            width: width,
+            height: height
+        };
+    }
+
     function render() {
         var radGrad, i, object, objectName, img;
 
@@ -1040,15 +1082,16 @@
                         [-1, 0],
                         [1, 0]
                     ],
-                    i, vOffset;
+                    i, vOffset, dim;
 
                 ctx.save();
                 ctx.translate(user.obj.x, user.obj.y);
 
                 img = imageCache.get(user.obj.img);
                 if (img) {
-                    vOffset = img.height / 2;
-                    ctx.drawImage(img.img, -img.width / 2, -vOffset);
+                    dim = limitAvatarSize(img.width, img.height);
+                    vOffset = dim.height / 2;
+                    ctx.drawImage(img.img, -dim.width / 2, -vOffset, dim.width, dim.height);
                 } else {
                     vOffset = 0;
                 }
