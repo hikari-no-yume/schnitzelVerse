@@ -266,14 +266,9 @@ User.setHomeRoom = function (nick, data) {
 User.getInventory = function (nick) {
     return this.getUserData(nick, 'inventory', []);
 };
-User.hasInventoryItem = function (nick, item) {
-    return this.getInventory(nick).indexOf(item) !== -1;
-};
 User.giveInventoryItem = function (nick, item) {
     var inventory = this.getInventory(nick);
-    if (inventory.indexOf(item) === -1) {
-        inventory.push(item);
-    }
+    inventory.push(item);
     this.setUserData(nick, 'inventory', inventory);
 };
 

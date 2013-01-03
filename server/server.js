@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 
 var websocket = require('websocket'),
+    formidable = require('formidable'),
     http = require('http'),
-    fs = require('fs');
+    fs = require('fs'),
+    url = require('url');
 
 var User = require('./user.js'),
     Rooms = require('./rooms.js'),
+    Assets = require('./assets.js'),
     constants = require('./constants.js');
 
 var server = http.createServer(function(request, response) {
-    var headers;
+    var headers, form, htmlhead, goback, file, parts, asset;
 
     console.log((new Date()) + ' Received request for ' + request.url);
 
@@ -23,13 +26,97 @@ var server = http.createServer(function(request, response) {
             'Access-Control-Allow-Origin': constants.DEFAULT_ORIGIN
         };
     }
+    htmlhead = '<!doctype html>\n<meta charset=utf-8>\n<title>' + constants.SITE_NAME + '</title>\n<link rel=stylesheet href="' + (constants.DEBUG_MODE ? constants.DEBUG_ORIGIN : constants.DEFAULT_ORIGIN) + '/main.css">\n';
+
+    parts = url.parse(request.url, true);
 
     // stats endpoint for login page
-    if (request.url === '/stats' && request.method === 'GET') {
+    if (parts.pathname === '/stats' && request.method === 'GET') {
         response.writeHead(200, headers);
         response.end(JSON.stringify({
             clients_connected: User.userCount
         }));
+    // upload form
+    } else if (parts.pathname === '/upload' && request.method === 'GET') {
+        if (parts.query.hasOwnProperty('nickname')) {
+            response.writeHead(200, headers);
+            response.end(htmlhead + 'Maximum size 200KB. GIF, JPEG and PNG files only.\n<form method=post action=/upload enctype=multipart/form-data>\n<label>File: <input type=file name=file></label><br>\n<label>Description: <input type=text name=desc></label><br>\n<input type=submit value=Upload>\n<input type=hidden name=nickname value=' + parts.query.nickname + '></form>');
+        } else {
+            response.writeHead(200, headers);
+            response.end(htmlhead + 'Error, nickname required.');
+        }
+    // upload endpoint
+    } else if (parts.pathname === '/upload' && request.method === 'POST') {
+        form = new formidable.IncomingForm();
+        form.hash = 'sha1';
+        form.parse(request, function(err, fields, files) {
+            if (!User.has(fields.nickname) || User.get(fields.nickname).conn.remoteAddress !== request.connection.remoteAddress) {
+                response.writeHead(200, headers);
+                response.end(htmlhead + 'Your IP address or nickname do not match with logged in users.');
+                return;
+            }
+            goback = '<br>\n<a href=/upload?nickname=' + fields.nickname + '>Go back</a>';
+            file = files.file;
+            if (!fields.desc) {
+                response.writeHead(200, headers);
+                response.end(htmlhead + 'Asset must be given a description.' + goback);
+                return;
+            }
+            if (!file || !file.size) {
+                response.writeHead(200, headers);
+                response.end(htmlhead + 'No file uploaded.' + goback);
+                return;
+            }
+            if (!(file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/gif')) {
+                response.writeHead(200, headers);
+                response.end(htmlhead + 'File type not allowed: ' + file.type + goback);
+                fs.unlink(file.path);
+                return;
+            }
+            if (file.size > 200*1000) {
+                response.writeHead(200, headers);
+                response.end(htmlhead + 'File too large: ' + file.size/1000 + 'KB > 200KB' + goback);
+                fs.unlink(file.path);
+                return;
+            }
+            Assets.add(file.path, fields.desc, file.type, file.size, file.hash, function (assetID) {
+                if (assetID) {
+                    User.giveInventoryItem(fields.nickname, {
+                        type: 'asset',
+                        data: {
+                            id: assetID,
+                            desc: fields.desc,
+                            type: file.type
+                        }
+                    });
+                    User.get(fields.nickname).sendAccountState();
+                    response.writeHead(200, headers);
+                    response.end(htmlhead + "File uploaded successfully and added to your inventory." + goback);
+                } else {
+                    response.writeHead(200, headers);
+                    response.end(htmlhead + "File upload failed. It may have been a duplicate." + goback);
+                }
+            });
+        });
+    // asset fetch
+    } else if (parts.pathname.substr(0, 8) === '/assets/' && request.method === 'GET') {
+        asset = Assets.get(parts.pathname.substr(8));
+        if (asset) {
+            fs.readFile(asset.path, 'binary', function (err, file) {
+                if (err) {
+                    response.writeHead(500, headers);
+                    response.end();
+                } else {
+                    headers['content-type'] = asset.type;
+                    response.writeHead(200, headers);
+                    response.write(file, 'binary');
+                    response.end();
+                }
+            });
+        } else {
+            response.writeHead(404, headers);
+            response.end();
+        }
     } else {
         response.writeHead(404, headers);
         response.end();
@@ -697,6 +784,7 @@ wsServer.on('request', function(request) {
         console.log((new Date()) + ' Connection from banned IP ' + request.remoteAddress + ' rejected.');
         return;
     }
+
 
     // check protocols
     if (request.requestedProtocols.length !== 1 || request.requestedProtocols[0] !== 'schnitzelverse') {

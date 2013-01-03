@@ -21,6 +21,7 @@
         bitcount,
         inventorylist, inventorylistbutton,
         friendslist, friendslistbutton,
+        uploader, uploaderiframe,
         roomlistbutton, roomlist, refreshbutton, homebutton,
         chatbar, chatbox, chatboxholder, chatbutton, chatlog, chatloglock, chatloglocked = false;
 
@@ -47,10 +48,7 @@
             this.users[nick] = {
                 obj: obj,
                 nick: nick,
-                special: special,
-                img: null,
-                imgData: null,
-                imgURL: null
+                special: special
             };
 
             this.update(nick, obj);
@@ -68,20 +66,6 @@
             // centre camera about player
             if (nick === myNick) {
                 translateViewport();
-            }
-
-            // if image changed
-            if (obj.img !== user.imgURL) {
-                user.img = document.createElement('img');
-                user.img.src = obj.img;
-                user.imgData = null;
-                user.imgURL = obj.img;
-                user.img.onload = function () {
-                    user.imgData = {
-                        width: user.img.width,
-                        height: user.img.height
-                    };
-                };
             }
 
             // log chat message if it has changed
@@ -141,18 +125,29 @@
     var imageCache = {
         cache: {},
 
-        get: function (url) {
+        get: function (id) {
             var img, that = this;
 
-            if (!this.cache.hasOwnProperty(url)) {
+            if (!id) {
+                return null;
+            }
+            if (!this.cache.hasOwnProperty(id)) {
                 img = document.createElement('img');
-                img.src = url;
-                this.cache[url] = null;
+                if (window.location.hostname === 'localhost') {
+                    img.src = 'http://localhost:9002/assets/' + id;
+                } else {
+                    img.src = 'http://ajf.me:9002/assets/' + id;
+                }
+                this.cache[id] = null;
                 img.onload = function () {
-                    that.cache[url] = img;
+                    that.cache[id] = {
+                        img: img,
+                        width: img.width,
+                        height: img.height
+                    };
                 };
             }
-            return this.cache[url];
+            return this.cache[id];
         }
     };
 
@@ -881,15 +876,26 @@
     }
 
     function renderInventoryList() {
-        var i, item, elem, list;
+        var i, item, elem, list, uploaderbtn;
 
         inventorylist.content.innerHTML = '';
+        uploaderbtn = document.createElement('button');
+        appendText(uploaderbtn, 'Upload new asset');
+        uploaderbtn.onclick = function () {
+            uploader.show();
+        };
+        inventorylist.content.appendChild(uploaderbtn);
+
         if (inventory.length) {
             list = document.createElement('ul');
             for (var i = 0; i < inventory.length; i++) {
                 item = inventory[i];
                 elem = document.createElement('li');
-                appendText(elem, item.type);
+                if (item.type === 'asset') {
+                    appendText(elem, 'Asset - ' + item.data.type + ' - Description: "' + item.data.desc + '" - ID ' + item.data.id);
+                } else {
+                    appendText(elem, 'Unknown item type: ' + item.type);
+                }
                 list.appendChild(elem);
             }
             inventorylist.content.appendChild(list);
@@ -942,6 +948,38 @@
         chatbox.value = '';
     }
 
+    function selectAsset(type, element) {
+        var popup, i, item, ul, li;
+
+        popup = makePopup('.asset-chooser', 'Choose asset', true, 200, 200, true, function () {
+            popup.destroy();
+        });
+
+        ul = document.createElement('ul');
+
+        for (i = 0; i < inventory.length; i++) {
+            item = inventory[i];
+            if (item.type !== 'asset') {
+                continue;
+            }
+            if (type === 'image' && !(item.data.type === 'image/png' || item.data.type === 'image/gif' || item.data.type === 'image/jpeg')) {
+                continue;
+            }
+
+            li = document.createElement('li');
+            appendText(li, item.data.type + ' - ' + item.data.desc);
+            (function (itemID) {
+                li.onclick = function () {
+                    element.value = itemID;
+                    popup.hide();
+                };
+            }(item.data.id));
+            ul.appendChild(li);
+        }
+
+        popup.content.appendChild(ul);
+    }
+
     function render() {
         var radGrad, i, object, objectName, img;
 
@@ -983,7 +1021,7 @@
 
                 img = imageCache.get(object.img);
                 if (img) {
-                    ctx.drawImage(img, -object.width/2, -object.height/2, object.width, object.height);
+                    ctx.drawImage(img.img, -object.width/2, -object.height/2, object.width, object.height);
                 }
 
                 ctx.restore();
@@ -1007,9 +1045,10 @@
                 ctx.save();
                 ctx.translate(user.obj.x, user.obj.y);
 
-                if (user.imgData) {
-                    vOffset = user.imgData.height / 2;
-                    ctx.drawImage(user.img, -user.imgData.width / 2, -vOffset);
+                img = imageCache.get(user.obj.img);
+                if (img) {
+                    vOffset = img.height / 2;
+                    ctx.drawImage(img.img, -img.width / 2, -vOffset);
                 } else {
                     vOffset = 0;
                 }
@@ -1133,6 +1172,20 @@
         };
         inventorylistbutton.disabled = true;
         chatbar.appendChild(inventorylistbutton);
+
+        uploader = makePopup('#uploader', 'Upload a new asset', true, 300, 300, true, null, function () {
+            var newurl;
+            if (window.location.hostname === 'localhost') {
+                newurl = 'http://localhost:9002/upload';
+            } else {
+                newurl = 'http://ajf.me:9002/upload';
+            }
+            newurl += '?nickname=' + myNick;
+            uploaderiframe.src = newurl;
+        });
+        uploaderiframe = document.createElement('iframe');
+        uploader.content.appendChild(uploaderiframe);
+        uploader.hide();
     }
 
     function initGUI_editDlg() {
@@ -1143,7 +1196,7 @@
             },
             {
                 property: 'img',
-                type: 'text'
+                type: 'asset_id'
             },
             {
                 property: 'angle',
@@ -1169,7 +1222,7 @@
                 property: 'height',
                 type: 'number'
             }
-        ];
+        ], i, field, prop, btn;
 
         editbutton = document.createElement('button');
         editbutton.id = 'edit-button';
@@ -1247,7 +1300,7 @@
                     type: 'object_add',
                     name: objectName,
                     data: {
-                        img: '/media/avatars/derpy_left_hover.gif',
+                        img: '',
                         angle: 0,
                         alpha: 255,
                         x: me.x + 200,
@@ -1268,19 +1321,34 @@
         appendText(editpropshead, 'Properties');
         editprops.appendChild(editpropshead);
 
-        for (var i = 0; i < props.length; i++) {
-            var prop = props[i];
+        for (i = 0; i < props.length; i++) {
+            prop = props[i];
 
             appendText(editprops, prop.property + ': ');
 
-            var field = document.createElement('input');
-            if (field.type === 'readonly') {
+            if (prop.type === 'readonly') {
+                field = document.createElement('input');
                 field.type = 'text';
                 field.readonly = true;
+                editprops.appendChild(field);
+            } else if (prop.type == 'asset_id') {
+                field = document.createElement('input');
+                field.type = 'text';
+                field.readonly = true;
+                editprops.appendChild(field);
+                btn = document.createElement('button');
+                appendText(btn, 'Choose asset');
+                (function (elem) {
+                    btn.onclick = function () {
+                        selectAsset('image', elem);
+                    };
+                }(field));
+                editprops.appendChild(btn);
             } else {
+                field = document.createElement('input');
                 field.type = prop.type;
+                editprops.appendChild(field);
             }
-            editprops.appendChild(field);
 
             editprops.appendChild(document.createElement('br'));
 
@@ -1596,7 +1664,7 @@
             connected = true;
             connecting = false;
             me = {
-                img: '/media/avatars/derpy_left_hover.gif',
+                img: '',
                 x: 0,
                 y: 0,
                 chat: ''
