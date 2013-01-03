@@ -1563,8 +1563,8 @@
         worldcanvas.onclick = function (e) {
             var i, object, cur, x, y, x1, x2, y1, y2;
 
-            x = e.x - cameraX;
-            y = e.y - cameraY;
+            x = e.layerX - cameraX;
+            y = e.layerY - cameraY;
             if (editing) {
                 for (i = myRoom.objectOrder.length - 1; i >= 0; i--) {
                     object = myRoom.objects[myRoom.objectOrder[i]];
