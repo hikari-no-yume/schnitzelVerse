@@ -14,6 +14,7 @@ function User (nick, conn, obj, room) {
     this.room = room;
     this.special = User.getSpecialStatus(nick);
 
+    nick = nick.toLowerCase();
     User.users[nick] = this;
     User.userCount++;
     if (User.isModerator(nick)) {
@@ -31,7 +32,7 @@ User.prototype.sendAccountState = function () {
     });
 };
 User.prototype.kill = function () {
-    delete User.users[this.nick];
+    delete User.users[this.nick.toLowerCase()];
 
     User.userCount--;
     if (User.isModerator(this.nick)) {
@@ -138,7 +139,7 @@ User.createAccount = function (nick, email) {
     if (this.emails.hasOwnProperty(email)) {
         throw new Error('Account with given email already exists.');
     }
-    this.accounts[nick] = {
+    this.accounts[nick.toLowerCase()] = {
         email: email
     };
     this.emails[email] = nick;
@@ -148,11 +149,13 @@ User.deleteAccount = function (nick) {
     if (!this.hasAccount(nick)) {
         throw new Error('No account with given nick exists.');
     }
+    nick = nick.toLowerCase();
     delete this.emails[this.accounts[nick].email];
     delete this.accounts[nick];
     this.save();
 };
 User.hasAccount = function (nick) {
+    nick = nick.toLowerCase();
     return this.accounts.hasOwnProperty(nick);
 };
 User.hasEmail = function (email) {
@@ -173,6 +176,7 @@ User.hasBits = function (nick) {
     }
 };
 User.getUserData = function (nick, property, defaultValue) {
+    nick = nick.toLowerCase();
     if (this.accounts.hasOwnProperty(nick)) {
         if (this.accounts[nick].hasOwnProperty(property)) {
             return this.accounts[nick][property];
@@ -184,6 +188,7 @@ User.setUserData = function (nick, property, value) {
     if (!this.hasAccount(nick)) {
         throw new Error('There is no account with the given nick.');
     }
+    nick = nick.toLowerCase();
     this.accounts[nick][property] = value;
     this.save();
 };
@@ -290,6 +295,7 @@ User.removeInventoryItem = function (nick, itemID) {
 };
 
 User.get = function (nick) {
+    nick = nick.toLowerCase();
     if(!this.has(nick)) {
         throw new Error("There is no user named: " + nick);
     }
@@ -297,6 +303,7 @@ User.get = function (nick) {
     return this.users[nick];
 };
 User.has = function (nick) {
+    nick = nick.toLowerCase();
     return this.users.hasOwnProperty(nick);
 };
 User.forEach = function (callback) {

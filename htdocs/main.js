@@ -45,7 +45,7 @@
                 throw new Error("There is already a user with the same nick.");
             }
 
-            this.users[nick] = {
+            this.users[nick.toLowerCase()] = {
                 obj: obj,
                 nick: nick,
                 special: special
@@ -61,7 +61,7 @@
         update: function (nick, obj) {
             this.hasCheck(nick);
 
-            var user = this.users[nick];
+            var user = this.users[nick.toLowerCase()];
 
             // centre camera about player
             if (nick === myNick) {
@@ -78,19 +78,21 @@
         kill: function (nick, doLog) {
             this.hasCheck(nick);
 
-            var user = this.users[nick];
+            var user = this.users[nick.toLowerCase()];
             this.userCount--;
             this.updateCounter();
             if (doLog) {
                 logLeaveInChat(nick, user.special);
             }
-            delete this.users[nick];
+            delete this.users[nick.toLowerCase()];
         },
         get: function (nick) {
+            nick = nick.toLowerCase();
             this.hasCheck(nick);
             return this.users[nick];
         },
         has: function (nick) {
+            nick = nick.toLowerCase();
             return this.users.hasOwnProperty(nick);
         },
         hasCheck: function (nick) {
@@ -101,7 +103,7 @@
         forEach: function (callback) {
             for (var nick in this.users) {
                 if (this.users.hasOwnProperty(nick)) {
-                    if (callback(nick) === 'stop') {
+                    if (callback(this.users[nick]) === 'stop') {
                         return;
                     }
                 }
@@ -417,8 +419,8 @@
 
     function changeRoom(room) {
         // clear users
-        userManager.forEach(function (nick) {
-            userManager.kill(nick, false);
+        userManager.forEach(function (iterUser) {
+            userManager.kill(iterUser.nick, false);
         });
 
         myRoom = room;
@@ -1070,9 +1072,8 @@
             }
 
             // users
-            userManager.forEach(function (nick) {
-                var user = userManager.get(nick),
-                    shadows = [
+            userManager.forEach(function (user) {
+                var shadows = [
                         [-1, -1],
                         [1, -1],
                         [-1, 1],
@@ -1105,7 +1106,7 @@
                 for (i = 0; i < shadows.length; i++) {
                     ctx.shadowOffsetX = shadows[i][0];
                     ctx.shadowOffsetY = shadows[i][1];
-                    ctx.fillText(nick, 0, vOffset);
+                    ctx.fillText(user.nick, 0, vOffset);
                 }
 
                 ctx.restore();
@@ -1175,15 +1176,15 @@
                 e.preventDefault();
                 var parts = chatbox.value.split(' ');
                 var lastpart = parts[parts.length - 1];
-                userManager.forEach(function (nick) {
-                    if (nick === myNick) {
+                userManager.forEach(function (user) {
+                    if (user.nick === myNick) {
                         return;
                     }
-                    if (nick.substr(0, lastpart.length) === lastpart) {
+                    if (user.nick.substr(0, lastpart.length).toLowerCase() === lastpart.toLowerCase()) {
                         if (parts.length === 1) {
-                            parts[parts.length - 1] = nick + ':';
+                            parts[parts.length - 1] = user.nick + ':';
                         } else {
-                            parts[parts.length - 1] = nick;
+                            parts[parts.length - 1] = user.nick;
                         }
                         parts.push('');
                         chatbox.value = parts.join(' ');

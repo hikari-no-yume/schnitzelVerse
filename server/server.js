@@ -337,8 +337,9 @@ var modMessages = {
     getLast: function (count, filter) {
         var retrieved = 0;
         var slice = [];
+        filter = filter.toLowerCase();
         for (var i = this.messages.length - 1; i >= 0; i--) {
-            if (!filter || this.messages[i].nick === filter || this.messages[i].from === filter) {
+            if (!filter || this.messages[i].nick.toLowerCase() === filter || this.messages[i].from.toLowerCase() === filter) {
                 slice.push(this.messages[i]);
                 if (++retrieved === count) {
                     break;
