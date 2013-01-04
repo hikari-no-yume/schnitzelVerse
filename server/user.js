@@ -60,24 +60,28 @@ User.emails = {};
 User.bypass = {};
 
 User.init = function () {
+    var data;
+
     this.specialUsers = JSON.parse(fs.readFileSync('data/special-users.json'));
     console.log('Loaded special users info');
     this.bypass = JSON.parse(fs.readFileSync('data/bypass.json'));
     console.log('Loaded login bypass exceptions');
     try {
-        var data1 = fs.readFileSync('data/accounts.json');
-        var data2 = fs.readFileSync('data/emails.json');
+        data = fs.readFileSync('data/accounts.json');
     } catch (e) {
         console.log('Error loading accounts, skipped');
         return;
     }
-    this.accounts = JSON.parse(data1);
-    this.emails = JSON.parse(data2);
+    data = JSON.parse(data);
+    this.accounts = data.accounts;
+    this.emails = data.emails;
     console.log('Loaded accounts');
 };
 User.save = function () {
-    fs.writeFileSync('data/accounts.json', JSON.stringify(this.accounts));
-    fs.writeFileSync('data/emails.json', JSON.stringify(this.emails));
+    fs.writeFileSync('data/accounts.json', JSON.stringify({
+        accounts: this.accounts,
+        emails: this.emails
+    }));
     console.log('Saved accounts');
 };
 User.getSpecialStatus = function (nick) {
