@@ -48,7 +48,9 @@
             this.users[nick.toLowerCase()] = {
                 obj: obj,
                 nick: nick,
-                special: special
+                special: special,
+                lastMsg: '',
+                lastMsgTime: secs()
             };
 
             this.update(nick, obj);
@@ -69,8 +71,14 @@
             }
 
             // log chat message if it has changed
-            if (obj.chat !== user.obj.chat && obj.chat !== '') {
-                logInChat(nick, obj.chat, user.special);
+            if (obj.chat !== user.lastMsg) {
+                if (obj.chat !== '') {
+                    logInChat(nick, obj.chat, user.special);
+                }
+                user.lastMsg = obj.chat;
+                console.log('Old time: ' + user.lastMsgTime);
+                user.lastMsgTime = secs();
+                console.log('New time: ' + user.lastMsgTime);
             }
 
             user.obj = obj;
@@ -152,6 +160,10 @@
             return this.cache[id];
         }
     };
+
+    function secs() {
+        return new Date().getTime() / 1000;
+    }
 
     function amModerator() {
         var status = mySpecialStatus;
@@ -283,13 +295,6 @@
             return 'modspeak';
         }
         return '';
-    }
-
-    function logMineInChat(nick, msg) {
-        chatPrint(['chatlog'], [
-            ['nick', nick, mySpecialStatus],
-            ['text', ': ' + msg]
-        ], highlightCheck(msg) + ' ' + modCheck(mySpecialStatus));
     }
 
     function logInChat(nick, msg, special) {
@@ -966,9 +971,6 @@
         // is chat message
         } else {
             me.chat = chatbox.value;
-            if (me.chat !== '') {
-                logMineInChat(myNick, me.chat, true);
-            }
             pushAndUpdateState(me);
         }
         chatbox.value = '';
@@ -1083,7 +1085,7 @@
                         [-1, 0],
                         [1, 0]
                     ],
-                    i, vOffset, dim, nick;
+                    i, vOffset, dim, nick, delta, measurement;
 
                 ctx.save();
                 ctx.translate(user.obj.x, user.obj.y);
@@ -1096,6 +1098,7 @@
                 } else {
                     vOffset = 0;
                 }
+                vOffset += 15;
 
                 ctx.font = 'bold 11pt sans-serif';
                 ctx.textAlign = 'center';
@@ -1125,6 +1128,24 @@
                     ctx.shadowOffsetX = shadows[i][0];
                     ctx.shadowOffsetY = shadows[i][1];
                     ctx.fillText(nick, 0, vOffset);
+                }
+
+                delta = 5 - (secs() - user.lastMsgTime);
+                if (delta > 0) {
+                    ctx.globalAlpha = (delta < 1 ? delta : 1);
+                    ctx.shadowColor = 'transparent';
+                    ctx.shadowOffsetX = ctx.shadowOffsetY = 0;
+                    ctx.font = '10pt sans-serif';
+
+                    measurement = ctx.measureText(user.lastMsg);
+
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.fillRect(-measurement.width/2, -(vOffset + 20), measurement.width, 20);
+
+                    ctx.fillStyle = 'black';
+                    ctx.font = '10pt sans-serif';
+                    ctx.textBaseLine = 'bottom';
+                    ctx.fillText(user.lastMsg, 0, -(vOffset+5));
                 }
 
                 ctx.restore();
