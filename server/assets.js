@@ -21,16 +21,18 @@ var Assets = {
         return this.assets.hasOwnProperty(id);
     },
     add: function (owner, path, description, type, size, hash, callback) {
-        var filename, file1, file2, that = this;
+        var id, filename, file1, file2, that = this;
 
-        // prevent duplicates
-        if (this.has(hash)) {
+        id = owner + '_' + hash;
+
+        // prevent same-user duplicates
+        if (this.has(id)) {
             fs.unlinkSync(path);
             callback(null);
             return;
         }
 
-        filename = 'data/assets/' + hash;
+        filename = 'data/assets/' + id;
         switch (type) {
             case 'image/jpeg':
                 filename += '.jpg';
@@ -47,12 +49,13 @@ var Assets = {
                 return;
         }
 
-        this.assets[hash] = {
+        this.assets[id] = {
             path: filename,
             desc: description,
             type: type,
             size: size,
             hash: hash,
+            id: id,
             owner: owner
         };
         file1 = fs.createReadStream(path);
@@ -61,7 +64,7 @@ var Assets = {
         file1.on('end', function () {
             fs.unlinkSync(path);
             that.save();
-            callback(hash);
+            callback(id);
         });
     },
     delete: function (id, callback) {
