@@ -185,7 +185,7 @@
 
     function appendNickname(parent, nick, special) {
         var nickname = document.createElement('span');
-        nickname.className = 'nickname' + (nick === myNick ? ' own' : '');
+        nickname.className = 'nickname';
         if (special !== false) {
             nickname.className += ' ' + special;
         }
@@ -1083,7 +1083,7 @@
                         [-1, 0],
                         [1, 0]
                     ],
-                    i, vOffset, dim;
+                    i, vOffset, dim, nick;
 
                 ctx.save();
                 ctx.translate(user.obj.x, user.obj.y);
@@ -1103,10 +1103,28 @@
                 ctx.fillStyle = 'white';
                 ctx.shadowColor = 'black';
 
+                nick = user.nick;
+
+                if (user.special === 'creator') {
+                    ctx.fillStyle = 'goldenrod';
+                    nick += ' (sV creator)';
+                } else if (user.special === 'developer') {
+                    ctx.fillStyle = 'orangered';
+                    nick += ' (sV developer)';
+                } else if (user.special === 'moderator') {
+                    ctx.fillStyle = 'forestgreen';
+                    nick += ' (sV moderator)';
+                } else if (user.special === 'bot') {
+                    ctx.fillStyle = 'red';
+                    nick += ' (bot)';
+                } else {
+                    ctx.fillStyle = 'white';
+                }
+
                 for (i = 0; i < shadows.length; i++) {
                     ctx.shadowOffsetX = shadows[i][0];
                     ctx.shadowOffsetY = shadows[i][1];
-                    ctx.fillText(user.nick, 0, vOffset);
+                    ctx.fillText(nick, 0, vOffset);
                 }
 
                 ctx.restore();
