@@ -926,6 +926,7 @@
                         btn.onclick = function () {
                             var newState = shallowCopy(me);
                             newState.img = assetID;
+                            localStorage.setItem('last-avatar', assetID);
                             pushAndUpdateState(newState);
                         };
                         elem.appendChild(btn);
@@ -1797,7 +1798,7 @@
             connected = true;
             connecting = false;
             me = {
-                img: '',
+                img: localStorage.getItem('last-avatar', '') || '',
                 x: 0,
                 y: 0,
                 chat: ''
