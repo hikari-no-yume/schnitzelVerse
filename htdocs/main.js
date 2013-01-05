@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var socket, connected = false, connecting = false, ignoreDisconnect = false, pageFocussed = false, unseenHighlights = 0,
+    var socket, connected = false, connecting = false, ignoreDisconnect = false, pageFocussed = false, billyMays = false, unseenHighlights = 0,
         me, myNick, myRoom = null, mySpecialStatus, inventory = [], friends = [],
         roomObjects = {}, roomObjectOrder = [],
         blockMovement = false, moveInterval = null, oldImgIndex = 0,
@@ -985,6 +985,9 @@
 
         // is command
         if (chatbox.value[0] === '/') {
+            if (chatbox.value.substr(0, 10) === '/BILLYMAYS') {
+                billyMays = !billyMays;
+            }
             socket.send(JSON.stringify({
                 type: 'console_command',
                 cmd: chatbox.value.substr(1)
@@ -993,7 +996,11 @@
         // is chat message
         } else {
             newState = shallowCopy(me);
-            newState.chat = chatbox.value;
+            if (billyMays) {
+                newState.chat = chatbox.value.toUpperCase();
+            } else {
+                newState.chat = chatbox.value;
+            }
             pushAndUpdateState(newState);
         }
         chatbox.value = '';

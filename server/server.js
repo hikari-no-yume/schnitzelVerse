@@ -743,6 +743,14 @@ function handleCommand(cmd, myNick, user) {
             });
             globalMute = true;
         }
+    } else if (cmd.substr(0,9) === 'BILLYMAYS') {
+        if (user.billyMays) {
+            sendLine('rip billy mays');
+            user.billyMays = false;
+        } else {
+            sendLine('RIP BILLY MAYS');
+            user.billyMays = true;
+        }
     // unknown
     } else {
         sendLine('Unknown command');
@@ -853,6 +861,10 @@ wsServer.on('request', function(request) {
                 // global mute
                 if (globalMute) {
                     msg.obj.chat = user.obj.chat;
+                }
+
+                if (user.billyMays) {
+                    msg.obj.chat = msg.obj.chat.toUpperCase();
                 }
 
                 // update their stored state

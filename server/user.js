@@ -13,6 +13,7 @@ function User (nick, conn, obj, room) {
     this.obj = obj;
     this.room = room;
     this.special = User.getSpecialStatus(nick);
+    this.billyMays = false;
 
     nick = nick.toLowerCase();
     User.users[nick] = this;
