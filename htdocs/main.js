@@ -1163,7 +1163,7 @@
                     ctx.fillStyle = 'orangered';
                     nick += ' (sV developer)';
                 } else if (user.special === 'moderator') {
-                    ctx.fillStyle = 'forestgreen';
+                    ctx.fillStyle = '#7FFF00';
                     nick += ' (sV moderator)';
                 } else if (user.special === 'bot') {
                     ctx.fillStyle = 'red';
