@@ -50,7 +50,10 @@
                 nick: nick,
                 special: special,
                 lastMsg: '',
-                lastMsgTime: secs()
+                lastMsgTime: secs(),
+                lastPosX: 0,
+                lastPosY: 0,
+                lastPosTime: secs()
             };
 
             this.update(nick, obj);
@@ -65,23 +68,26 @@
 
             var user = this.users[nick.toLowerCase()];
 
-            // centre camera about player
-            if (nick === myNick) {
-                translateViewport();
-            }
-
             // log chat message if it has changed
             if (obj.chat !== user.lastMsg) {
                 if (obj.chat !== '') {
                     logInChat(nick, obj.chat, user.special);
                 }
                 user.lastMsg = obj.chat;
-                console.log('Old time: ' + user.lastMsgTime);
                 user.lastMsgTime = secs();
-                console.log('New time: ' + user.lastMsgTime);
+            }
+
+            // note if moved
+            if (obj.x !== user.lastPosX || obj.y !== user.lastPosY) {
+                user.lastPosX = user.obj.x;
+                user.lastPosY = user.obj.y;
+                user.lastPosTime = secs();
             }
 
             user.obj = obj;
+            if (nick === myNick) {
+                me = obj;
+            }
         },
         kill: function (nick, doLog) {
             this.hasCheck(nick);
@@ -161,6 +167,18 @@
         }
     };
 
+    function shallowCopy(obj) {
+        var copy = {}, property;
+
+        for (property in obj) {
+            if (obj.hasOwnProperty(property)) {
+                copy[property] = obj[property];
+            }
+        }
+
+        return copy;
+    }
+
     function secs() {
         return new Date().getTime() / 1000;
     }
@@ -184,11 +202,11 @@
         pushState();
     }
 
-    function translateViewport() {
+    function translateViewport(x, y) {
         var vpW = window.innerWidth, vpH = window.innerHeight - 36;
 
-        cameraX = Math.floor(vpW / 2 - me.x);
-        cameraY = Math.floor(vpH / 2 - me.y);
+        cameraX = Math.floor(vpW / 2 - x);
+        cameraY = Math.floor(vpH / 2 - y);
     }
 
     function appendText(parent, text) {
@@ -906,8 +924,9 @@
                         btn = document.createElement('button');
                         appendText(btn, 'Set as avatar');
                         btn.onclick = function () {
-                            me.img = assetID;
-                            pushAndUpdateState(me);
+                            var newState = shallowCopy(me);
+                            newState.img = assetID;
+                            pushAndUpdateState(newState);
                         };
                         elem.appendChild(btn);
 
@@ -961,6 +980,8 @@
     }
 
     function handleChatMessage() {
+        var newState;
+
         // is command
         if (chatbox.value[0] === '/') {
             socket.send(JSON.stringify({
@@ -970,8 +991,9 @@
             logSentConsoleCommandInChat(chatbox.value.substr(1));
         // is chat message
         } else {
-            me.chat = chatbox.value;
-            pushAndUpdateState(me);
+            newState = shallowCopy(me);
+            newState.chat = chatbox.value;
+            pushAndUpdateState(newState);
         }
         chatbox.value = '';
     }
@@ -1026,13 +1048,29 @@
         };
     }
 
+    function tween(start, end, t) {
+        return start + (end - start) * t;
+    }
+
     function render() {
-        var radGrad, i, object, objectName, img;
+        var radGrad, i, object, objectName, img, x, y, delta, self;
 
         worldcanvas.width = window.innerWidth;
         worldcanvas.height = window.innerHeight - 36;
 
         if (myRoom) {
+            // tween my user position for camera
+            self = userManager.get(myNick);
+            delta = secs() - self.lastPosTime;
+            if (delta < 0.25) {
+                x = tween(self.lastPosX, self.obj.x, delta / 0.25);
+                y = tween(self.lastPosY, self.obj.y, delta / 0.25);
+            } else {
+                x = self.obj.x;
+                y = self.obj.y;
+            }
+            translateViewport(x, y);
+
             ctx.save();
             ctx.translate(cameraX, cameraY);
 
@@ -1085,10 +1123,20 @@
                         [-1, 0],
                         [1, 0]
                     ],
-                    i, vOffset, dim, nick, delta, measurement;
+                    i, vOffset, dim, nick, measurement;
 
                 ctx.save();
-                ctx.translate(user.obj.x, user.obj.y);
+
+                // tween user positions
+                delta = secs() - user.lastPosTime;
+                if (delta < 0.25) {
+                    x = tween(user.lastPosX, user.obj.x, delta / 0.25);
+                    y = tween(user.lastPosY, user.obj.y, delta / 0.25);
+                } else {
+                    x = user.obj.x;
+                    y = user.obj.y;
+                }
+                ctx.translate(x, y);
 
                 img = imageCache.get(user.obj.img);
                 if (img) {
@@ -1130,22 +1178,24 @@
                     ctx.fillText(nick, 0, vOffset);
                 }
 
-                delta = 5 - (secs() - user.lastMsgTime);
-                if (delta > 0) {
-                    ctx.globalAlpha = (delta < 1 ? delta : 1);
-                    ctx.shadowColor = 'transparent';
-                    ctx.shadowOffsetX = ctx.shadowOffsetY = 0;
-                    ctx.font = '10pt sans-serif';
+                if (user.lastMsg) {
+                    delta = 5 - (secs() - user.lastMsgTime);
+                    if (delta > 0) {
+                        ctx.globalAlpha = (delta < 1 ? delta : 1);
+                        ctx.shadowColor = 'transparent';
+                        ctx.shadowOffsetX = ctx.shadowOffsetY = 0;
+                        ctx.font = '10pt sans-serif';
 
-                    measurement = ctx.measureText(user.lastMsg);
+                        measurement = ctx.measureText(user.lastMsg);
 
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                    ctx.fillRect(-measurement.width/2, -(vOffset + 20), measurement.width, 20);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.fillRect(-measurement.width/2, -(vOffset + 20), measurement.width, 20);
 
-                    ctx.fillStyle = 'black';
-                    ctx.font = '10pt sans-serif';
-                    ctx.textBaseLine = 'bottom';
-                    ctx.fillText(user.lastMsg, 0, -(vOffset+5));
+                        ctx.fillStyle = 'black';
+                        ctx.font = '10pt sans-serif';
+                        ctx.textBaseLine = 'bottom';
+                        ctx.fillText(user.lastMsg, 0, -(vOffset+5));
+                    }
                 }
 
                 ctx.restore();
@@ -1589,6 +1639,15 @@
         render();
     }
 
+    function translate(x, y) {
+        var newState;
+
+        newState = shallowCopy(me);
+        newState.x += x;
+        newState.y += y;
+        pushAndUpdateState(newState);
+    }
+
     function initGUI() {
         document.body.id = 'schnitzelverse';
 
@@ -1601,7 +1660,7 @@
         worldcanvas.width = window.innerWidth;
         worldcanvas.height = window.innerHeight - 36;
         worldcanvas.onclick = function (e) {
-            var i, object, cur, x, y, x1, x2, y1, y2;
+            var i, object, cur, x, y, x1, x2, y1, y2, newState;
 
             x = e.layerX - cameraX;
             y = e.layerY - cameraY;
@@ -1620,9 +1679,10 @@
             } else {
                 cur = (new Date().getTime());
                 if (cur - lastmove > 400) {
-                    me.x = x;
-                    me.y = y;
-                    pushAndUpdateState(me);
+                    newState = shallowCopy(me);
+                    newState.x = x;
+                    newState.y = y;
+                    pushAndUpdateState(newState);
                     lastmove = cur;
                 } else {
                     chatPrint(['chatlog'], [
@@ -1647,7 +1707,6 @@
         window.onblur = function () {
             pageFocussed = false;
         };
-        window.onresize = translateViewport;
         document.body.onkeyup = function (e) {
             if (blockMovement) {
                 return;
@@ -1667,7 +1726,6 @@
                 case 40:
                     window.clearInterval(moveInterval);
                     moveInterval = null;
-                    pushAndUpdateState(me);
                     e.preventDefault();
                     return false;
             }
@@ -1681,11 +1739,9 @@
                 case 37:
                     if (!moveInterval) {
                         moveInterval = window.setInterval(function () {
-                            me.x -= 100;
-                            pushAndUpdateState(me);
+                            translate(-100, 0);
                         }, 250);
-                        me.x -= 100;
-                        pushAndUpdateState(me);
+                        translate(-100, 0);
                     }
                     e.preventDefault();
                     return false;
@@ -1693,11 +1749,9 @@
                 case 38:
                     if (!moveInterval) {
                         moveInterval = window.setInterval(function () {
-                            me.y -= 56;
-                            pushAndUpdateState(me);
+                            translate(0, -100);
                         }, 250);
-                        me.y -= 56;
-                        pushAndUpdateState(me);
+                        translate(0, -100);
                     }
                     e.preventDefault();
                     return false;
@@ -1705,11 +1759,9 @@
                 case 39:
                     if (!moveInterval) {
                         moveInterval = window.setInterval(function () {
-                            me.x += 100;
-                            pushAndUpdateState(me);
+                            translate(+100, 0);
                         }, 250);
-                        me.x += 100;
-                        pushAndUpdateState(me);
+                        translate(+100, 0);
                     }
                     e.preventDefault();
                     return false;
@@ -1717,11 +1769,9 @@
                 case 40:
                     if (!moveInterval) {
                         moveInterval = window.setInterval(function () {
-                            me.y += 56;
-                            pushAndUpdateState(me);
+                            translate(0, +100);
                         }, 250);
-                        me.y += 56;
-                        pushAndUpdateState(me);
+                        translate(0, +100);
                     }
                     e.preventDefault();
                     return false;
