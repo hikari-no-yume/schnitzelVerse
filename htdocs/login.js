@@ -57,7 +57,7 @@
         div.appendChild(desc1);
 
         loginbtn = document.createElement('button');
-        loginbtn.appendChild(document.createTextNode('Log in with Persona'));
+        loginbtn.appendChild(document.createTextNode('Sign in to sV (using Persona login)'));
         loginbtn.onclick = function () {
             navigator.id.watch({
                 loggedInUser: null,
@@ -105,7 +105,7 @@
         div.appendChild(nick);
 
         signupbtn = document.createElement('button');
-        signupbtn.appendChild(document.createTextNode('Sign up with Persona'));
+        signupbtn.appendChild(document.createTextNode('Create sV Account (using Persona login)'));
         signupbtn.onclick = function () {
             var nickname;
 
