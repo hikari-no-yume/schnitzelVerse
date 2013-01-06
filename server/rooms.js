@@ -85,6 +85,9 @@ var Rooms = {
                 });
             }
         }
+        list.sort(function (room1, room2) {
+            return room2.user_count - room1.user_count;
+        });
         return list;
     },
     doRoomChange: function (roomName, user) {
