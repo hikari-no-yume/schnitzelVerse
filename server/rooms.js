@@ -179,11 +179,21 @@ var Rooms = {
         // broadcast new state to other clients in same room
         User.forEach(function (iterUser) {
             if (iterUser.room === roomName) {
-                iterUser.send({
-                    type: 'object_add',
-                    data: object,
-                    name: objectName
-                });
+                if (iterUser.nick === owner) {
+                    iterUser.send({
+                        type: 'object_add',
+                        data: object,
+                        name: objectName,
+                        mine: true
+                    });
+                } else {
+                    iterUser.send({
+                        type: 'object_add',
+                        data: object,
+                        name: objectName,
+                        mine: false
+                    });
+                }
             }
         });
     },

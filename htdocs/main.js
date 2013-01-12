@@ -1975,7 +1975,11 @@
                 case 'object_add':
                     myRoom.objects[msg.name] = msg.data;
                     myRoom.objectOrder.push(msg.name);
-                    refreshObjectList();
+                    if (msg.mine) {
+                        refreshObjectList(msg.name);
+                    } else {
+                        refreshObjectList();
+                    }
                 break;
                 case 'object_update':
                     myRoom.objects[msg.name] = msg.data;
