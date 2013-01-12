@@ -49,7 +49,7 @@
                 obj: obj,
                 nick: nick,
                 special: special,
-                lastMsg: '',
+                lastMsg: null,
                 lastMsgTime: secs(),
                 lastPosX: 0,
                 lastPosY: 0,
@@ -70,7 +70,7 @@
 
             // log chat message if it has changed
             if (obj.chat !== user.lastMsg) {
-                if (obj.chat !== '') {
+                if (obj.chat !== '' && user.lastMsg !== null) {
                     logInChat(nick, obj.chat, user.special);
                 }
                 user.lastMsg = obj.chat;
