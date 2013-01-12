@@ -152,7 +152,7 @@
                 if (window.location.hostname === 'localhost') {
                     img.src = 'http://localhost:9002/assets/' + id;
                 } else {
-                    img.src = 'http://ajf.me:9002/assets/' + id;
+                    img.src = 'http://schnitzelverse.ajf.me/assets/' + id;
                 }
                 this.cache[id] = null;
                 img.onload = function () {

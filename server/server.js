@@ -109,6 +109,7 @@ var server = http.createServer(function(request, response) {
                     response.end();
                 } else {
                     headers['content-type'] = asset.type;
+                    headers['cache-control'] = "max-age=" + 3600*24*7;
                     response.writeHead(200, headers);
                     response.write(file, 'binary');
                     response.end();
