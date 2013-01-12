@@ -40,7 +40,7 @@ var server = http.createServer(function(request, response) {
     } else if (parts.pathname === '/upload' && request.method === 'GET') {
         if (parts.query.hasOwnProperty('nickname')) {
             response.writeHead(200, headers);
-            response.end(htmlhead + 'Maximum size 200KB. GIF, JPEG and PNG files only.\n<form method=post action=/upload enctype=multipart/form-data>\n<label>File: <input type=file name=file></label><br>\n<label>Description: <input type=text name=desc></label><br>\n<input type=submit value=Upload>\n<input type=hidden name=nickname value=' + parts.query.nickname + '></form>');
+            response.end(htmlhead + 'Maximum size 600KB. GIF, JPEG and PNG files only.\n<form method=post action=/upload enctype=multipart/form-data>\n<label>File: <input type=file name=file></label><br>\n<label>Description: <input type=text name=desc></label><br>\n<input type=submit value=Upload>\n<input type=hidden name=nickname value=' + parts.query.nickname + '></form>');
         } else {
             response.writeHead(200, headers);
             response.end(htmlhead + 'Error, nickname required.');
@@ -74,9 +74,9 @@ var server = http.createServer(function(request, response) {
                 fs.unlink(file.path);
                 return;
             }
-            if (file.size > 200*1000) {
+            if (file.size > 600*1000) {
                 response.writeHead(200, headers);
-                response.end(htmlhead + 'File too large: ' + file.size/1000 + 'KB > 200KB' + goback);
+                response.end(htmlhead + 'File too large: ' + file.size/1000 + 'KB > 600KB' + goback);
                 fs.unlink(file.path);
                 return;
             }
