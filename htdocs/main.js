@@ -917,7 +917,7 @@
                 item = inventory[i];
                 elem = document.createElement('li');
                 if (item.type === 'asset') {
-                    appendText(elem, 'Asset - ' + item.data.type + ' - Description: "' + item.data.desc + '" - ID ' + item.data.id);
+                    appendText(elem, 'Asset - ' + item.data.type + ' - ' + item.data.desc);
                     (function (assetID, itemID) {
                         var btn;
 

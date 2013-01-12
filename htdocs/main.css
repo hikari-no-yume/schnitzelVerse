@@ -137,10 +137,14 @@ body {
     border: 4px solid lime;
 }
 
-.profile .popup-content button, #loginbox .popup-content input, #account-settings .popup-content input, #account-settings .popup-content button, #bit-count, #account-settings .popup-content .button, #room-list .popup-content button, #edit-dlg .popup-content button, #edit-dlg .popup-content select, .chooser .popup-content button {
+.profile .popup-content button, #loginbox .popup-content input, #account-settings .popup-content input, #account-settings .popup-content button, #bit-count, #account-settings .popup-content .button, #room-list .popup-content button, #edit-dlg .popup-content button, #edit-dlg .popup-content select {
     display: block;
     width: 100%;
     margin-bottom: 6px;
+}
+.chooser .popup-content button {
+    display: inline-block;
+    width: auto;
 }
 
 #uploader {
@@ -227,8 +231,8 @@ input[type=submit], .button, button {
 }
 
 .chooser {
-    width: 400px;
-    height: 300px;
+    width: 450px;
+    height: 450px;
 }
 
 .chooser-preview {
@@ -452,7 +456,7 @@ input[type=submit], .button, button {
     height: 300px;
 }
 
-#friends-list ul, #room-list .popup-content ul, .asset-chooser .popup-content ul {
+#friends-list ul, #room-list .popup-content ul, .asset-chooser .popup-content ul, .chooser ul {
     margin: 0;
     padding-left: 20px;
     list-style-type: square;
