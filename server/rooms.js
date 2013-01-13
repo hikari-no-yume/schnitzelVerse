@@ -104,11 +104,13 @@ var Rooms = {
             }
         }
         list.sort(function (room1, room2) {
-            return room2.user_count - room1.user_count;
-        });
-        list.sort(function (room1, room2) {
-            var r1 = (room1.pinned ? 1 : 0), r2 = (room2.pinned ? 1 : 0);
-            return r2 - r1;
+            if (room1.pinned && !room2.pinned) {
+                return -1;
+            } else if (room2.pinned && !room1.pinned) {
+                return 1;
+            } else {
+                return room2.user_count - room1.user_count;
+            }
         });
         return list;
     },
