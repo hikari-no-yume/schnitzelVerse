@@ -1163,6 +1163,14 @@
                     ctx.drawImage(img.img, -object.width/2, -object.height/2, object.width, object.height);
                 }
 
+                // script
+                if (object.script) {
+                    ctx.save();
+                    ctx.translate(-object.width/2, -object.height/2);
+                    fjord.exec(object.script, {}, ctx, object.width, object.height);
+                    ctx.restore();
+                }
+
                 ctx.restore();
             }
 
@@ -1409,6 +1417,10 @@
             {
                 property: 'height',
                 type: 'number'
+            },
+            {
+                property: 'script',
+                type: 'text'
             }
         ], i, field, prop, btn;
 
@@ -1566,9 +1578,9 @@
             for (i = 0; i < props.length; i++) {
                 prop = props[i];
                 if (prop.type === 'number') {
-                    myRoom.objects[selected][prop.property] = parseInt(prop.element.value);
+                    myRoom.objects[selected][prop.property] = parseInt(prop.element.value || '');
                 } else if (prop.type !== 'readonly') {
-                    myRoom.objects[selected][prop.property] = prop.element.value;
+                    myRoom.objects[selected][prop.property] = prop.element.value || '';
                 }
             }
 
