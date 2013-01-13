@@ -86,6 +86,7 @@ User.save = function () {
     console.log('Saved accounts');
 };
 User.getSpecialStatus = function (nick) {
+    nick = nick.toLowerCase();
     if (this.specialUsers.hasOwnProperty(nick)) {
         return this.specialUsers[nick];
     }
