@@ -420,13 +420,15 @@
         for (var i = 0; i < rooms.length; i++) {
             var data = rooms[i];
             var item = document.createElement('li');
-            if (!data.user_count) {
-                item.className += ' empty-room';
+            if (data.pinned) {
+                item.className = 'pinned';
+            } else if (!data.user_count) {
+                item.className = 'empty-room';
             } else {
                 if (data.eighteen_plus) {
-                    item.className += ' eighteen-plus';
+                    item.className = 'eighteen-plus';
                 } else {
-                    item.className += ' open-to-everyone';
+                    item.className = 'open-to-everyone';
                 }
             }
             appendText(item, '"' + data.name + '" (' + data.user_count + ' users) - ' + (data.eighteen_plus ? '18+ ONLY' : 'open to everyone'));

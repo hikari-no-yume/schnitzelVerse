@@ -41,6 +41,13 @@ var Rooms = {
             return false;
         }
     },
+    getPinned: function (name) {
+        if (this.rooms.hasOwnProperty(name)) {
+            return this.rooms[name].pinned;
+        } else {
+            return false;
+        }
+    },
     getUserCount: function (name) {
         if (this.roomUserCounts.hasOwnProperty(name)) {
             return this.roomUserCounts[name];
@@ -69,6 +76,7 @@ var Rooms = {
             owner: owner,
             publicEdit: false,
             eighteenPlus: false,
+            pinned: false,
             name: name
         };
         this.save();
@@ -90,12 +98,17 @@ var Rooms = {
                 list.push({
                     name: name,
                     user_count: this.getUserCount(name),
-                    eighteen_plus: this.getEighteenPlus(name)
+                    eighteen_plus: this.getEighteenPlus(name),
+                    pinned: this.getPinned(name)
                 });
             }
         }
         list.sort(function (room1, room2) {
             return room2.user_count - room1.user_count;
+        });
+        list.sort(function (room1, room2) {
+            var r1 = (room1.pinned ? 1 : 0), r2 = (room2.pinned ? 1 : 0);
+            return r2 - r1;
         });
         return list;
     },

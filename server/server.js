@@ -457,7 +457,7 @@ function handleCommand(cmd, myNick, user) {
         user.send({
             type: 'help',
             lines: [
-                'Ten mod commands available: 1) kick, 2) kickban, 3) warn, 4) unban, 5) broadcast, 6) aliases, 7) move, 8) bits, 9) modlog, 10) modmsgs',
+                'Ten mod commands available: 1) kick, 2) kickban, 3) warn, 4) unban, 5) broadcast, 6) aliases, 7) move, 8) bits, 9) modlog, 10) modmsgs, 11) pin',
                 "1. kick & 2. kickban - kick takes the nick of someone, they (& any aliases) will be kicked, e.g. /kick sillyfilly. kickban is like kick but also permabans by IP. kick and kickban can also take a second parameter for a reason message, e.g. /kick sillyfilly Don't spam the chat!",
                 '3. warn - formally warns someone (shown immediately if online or upon next login if not), e.g. /warn somefilly Stop spamming. Final warning.',
                 '4. unban - Unbans an IP, e.g. /unban 192.168.1.1',
@@ -467,6 +467,7 @@ function handleCommand(cmd, myNick, user) {
                 "8. bits - Adds to or removes from someone's bits balance, e.g. /bits 20 ajf, /bits -10 otherguy",
                 "9. modlog - Shows moderator activity log. Optionally specify count (default 10), e.g. /modlog 15. You can also specify filter (ban/unban/kick/move/broadcast/bits_change), e.g. /modlog 25 unban",
                 "10. modmsgs - Shows messages/reports to mods. Optionally specify count (default 10), e.g. /modmsgs 10. You can also specify nick filter to see messages concerning or by someone, e.g. /modmsgs 25 somefilly",
+                "11. pin - Pins/unpins a room in the room list, e.g. /pin welcome_to_schnitzelVerse",
                 'See also: /help'
 
             ]
@@ -727,6 +728,20 @@ function handleCommand(cmd, myNick, user) {
             cmd: cmd,
             messages: messages
         });
+    // pin room
+    } else if (canMod && cmd.substr(0, 4) === 'pin ') {
+        var topin = cmd.substr(4);
+        if (!Rooms.has(topin)) {
+            sendLine('No such room: "' + topin + '"');
+        } else {
+            topin = Rooms.get(topin);
+            topin.pinned = !topin.pinned;
+            if (topin.pinned) {
+                sendLine('Pinned the room: "' + topin.name + '"');
+            } else {
+                sendLine('Unpinned the room: "' + topin.name + '"');
+            }
+        }
     // royal canterlot voice
     } else if (isCreator && cmd.substr(0,4) === 'mute') {
         if (globalMute) {

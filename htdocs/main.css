@@ -242,6 +242,13 @@ input[type=submit], .button, button {
     color: green;
     font-weight: bold;
 }
+.pinned {
+    color: purple;
+    font-weight: bold;
+}
+.pinned::before {
+    content: url(/media/icons/pin.png);
+}
 
 .chooser {
     width: 450px;
