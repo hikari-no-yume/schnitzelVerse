@@ -49,56 +49,61 @@ var server = http.createServer(function(request, response) {
     } else if (parts.pathname === '/upload' && request.method === 'POST') {
         form = new formidable.IncomingForm();
         form.hash = 'sha1';
-        form.parse(request, function(err, fields, files) {
-            if (!User.has(fields.nickname) || User.get(fields.nickname).conn.remoteAddress !== request.connection.remoteAddress) {
-                response.writeHead(200, headers);
-                response.end(htmlhead + 'Your IP address or nickname do not match with logged in users.');
-                return;
-            }
-            myNick = fields.nickname;
-            goback = '<br>\n<a href=/upload?nickname=' + myNick + '>Go back</a>';
-            file = files.file;
-            if (!fields.desc) {
-                response.writeHead(200, headers);
-                response.end(htmlhead + 'Asset must be given a description.' + goback);
-                return;
-            }
-            if (!file || !file.size) {
-                response.writeHead(200, headers);
-                response.end(htmlhead + 'No file uploaded.' + goback);
-                return;
-            }
-            if (!(file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/gif')) {
-                response.writeHead(200, headers);
-                response.end(htmlhead + 'File type not allowed: ' + file.type + goback);
-                fs.unlink(file.path);
-                return;
-            }
-            if (file.size > 600*1000) {
-                response.writeHead(200, headers);
-                response.end(htmlhead + 'File too large: ' + file.size/1000 + 'KB > 600KB' + goback);
-                fs.unlink(file.path);
-                return;
-            }
-            Assets.add(myNick, file.path, fields.desc, file.type, file.size, file.hash, function (assetID) {
-                if (assetID) {
-                    User.giveInventoryItem(myNick, {
-                        type: 'asset',
-                        data: {
-                            id: assetID,
-                            desc: fields.desc,
-                            type: file.type
-                        }
-                    });
-                    User.get(fields.nickname).sendAccountState();
+        try {
+            form.parse(request, function(err, fields, files) {
+                if (!User.has(fields.nickname) || User.get(fields.nickname).conn.remoteAddress !== request.connection.remoteAddress) {
                     response.writeHead(200, headers);
-                    response.end(htmlhead + "File uploaded successfully and added to your inventory." + goback);
-                } else {
-                    response.writeHead(200, headers);
-                    response.end(htmlhead + "File upload failed. It may have been a duplicate." + goback);
+                    response.end(htmlhead + 'Your IP address or nickname do not match with logged in users.');
+                    return;
                 }
+                myNick = fields.nickname;
+                goback = '<br>\n<a href=/upload?nickname=' + myNick + '>Go back</a>';
+                file = files.file;
+                if (!fields.desc) {
+                    response.writeHead(200, headers);
+                    response.end(htmlhead + 'Asset must be given a description.' + goback);
+                    return;
+                }
+                if (!file || !file.size) {
+                    response.writeHead(200, headers);
+                    response.end(htmlhead + 'No file uploaded.' + goback);
+                    return;
+                }
+                if (!(file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/gif')) {
+                    response.writeHead(200, headers);
+                    response.end(htmlhead + 'File type not allowed: ' + file.type + goback);
+                    fs.unlink(file.path);
+                    return;
+                }
+                if (file.size > 600*1000) {
+                    response.writeHead(200, headers);
+                    response.end(htmlhead + 'File too large: ' + file.size/1000 + 'KB > 600KB' + goback);
+                    fs.unlink(file.path);
+                    return;
+                }
+                Assets.add(myNick, file.path, fields.desc, file.type, file.size, file.hash, function (assetID) {
+                    if (assetID) {
+                        User.giveInventoryItem(myNick, {
+                            type: 'asset',
+                            data: {
+                                id: assetID,
+                                desc: fields.desc,
+                                type: file.type
+                            }
+                        });
+                        User.get(fields.nickname).sendAccountState();
+                        response.writeHead(200, headers);
+                        response.end(htmlhead + "File uploaded successfully and added to your inventory." + goback);
+                    } else {
+                        response.writeHead(200, headers);
+                        response.end(htmlhead + "File upload failed. It may have been a duplicate." + goback);
+                    }
+                });
             });
-        });
+        } catch (e) {
+            response.writeHead(500, headers);
+            response.end("500 Internal Server Error: " + e);
+        }
     // asset fetch
     } else if (parts.pathname.substr(0, 8) === '/assets/' && request.method === 'GET') {
         asset = Assets.get(parts.pathname.substr(8));
