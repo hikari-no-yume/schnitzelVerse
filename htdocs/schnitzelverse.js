@@ -1163,11 +1163,27 @@
                     ctx.drawImage(img.img, -object.width/2, -object.height/2, object.width, object.height);
                 }
 
+                ctx.globalAlpha = 1;
+
                 // script
                 if (object.script) {
                     ctx.save();
                     ctx.translate(-object.width/2, -object.height/2);
-                    fjord.exec(object.script, {}, ctx, object.width, object.height);
+                    ctx.beginPath();
+                    ctx.rect(0, 0, object.width, object.height);
+                    ctx.clip();
+                    fjord.exec(object.script, {
+                        playerX: Math.floor(x),
+                        playerY: Math.floor(y),
+                        playerXRel: Math.floor(x - (object.x - object.width / 2)),
+                        playerYRel: Math.floor(y - (object.y - object.height / 2)),
+                        playerNick: myNick,
+                        objectX: object.x,
+                        objectY: object.y,
+                        objectWidth: object.width,
+                        objectHeight: object.height,
+                        msecs: Math.floor(secs() * 1000)
+                    }, ctx, object.width, object.height);
                     ctx.restore();
                 }
 
