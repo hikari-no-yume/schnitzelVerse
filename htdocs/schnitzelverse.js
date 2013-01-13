@@ -1494,7 +1494,7 @@
 
                 for (i = 0; i < props.length; i++) {
                     prop = props[i];
-                    prop.element.value = myRoom.objects[selected][prop.property];
+                    prop.element.value = myRoom.objects[selected][prop.property] || '';
                 }
             } else {
                 selected = null;
