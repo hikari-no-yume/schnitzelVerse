@@ -97,6 +97,7 @@ User.isModerator = function (nick) {
     return (status === 'moderator' || status === 'developer' || status === 'creator' || status === 'bot');
 };
 User.checkBypass = function (nick, bypass) {
+    nick = nick.toLowerCase();
     if (!this.bypass.hasOwnProperty(nick)) {
         return false;
     }
