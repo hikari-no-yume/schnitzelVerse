@@ -15,7 +15,7 @@
     var container,
         worldcanvas, ctx,
         topbuttons,
-        roomsettingsbutton, roomsettings, publiceditlabel, publicedit,
+        roomsettingsbutton, roomsettings, publiceditlabel, publicedit, eighteenpluslabel, eighteenplus,
         editbutton, editdlg, objectlist, newobjectbtn, editprops, editpropshead, editpropsupdate, editpropsdelete,
         accountsettings, accountsettingsbutton, changepassbutton, rmpassbutton, sethomebutton,
         bitcount,
@@ -128,7 +128,7 @@
             var str;
             if (myRoom !== null) {
                 str = myRoom.name;
-                str += ' (owned by "' + myRoom.owner + '" - public editing ' + (myRoom.publicEdit ? 'enabled' : 'disabled') + ')';
+                str += ' (owned by "' + myRoom.owner + '" - open to ' + (myRoom.eighteenPlus ? '18+ only' : 'everyone') + ' - public editing ' + (myRoom.publicEdit ? 'enabled' : 'disabled') + ')';
                 str += ' - ' + this.userCount + '/' + globalUserCount + ' users';
             } else {
                 str = globalUserCount + ' users online';
@@ -421,9 +421,14 @@
             var data = rooms[i];
             var item = document.createElement('li');
             if (!data.user_count) {
-                item.className = 'empty-room';
+                item.className += ' empty-room';
             }
-            appendText(item, '"' + data.name + '" (' + data.user_count + ' users)');
+            if (data.eighteen_plus) {
+                item.className += ' eighteen-plus';
+            } else {
+                item.className += ' open-to-everyone';
+            }
+            appendText(item, '"' + data.name + '" (' + data.user_count + ' users) - ' + (data.eighteen_plus ? '18+ ONLY' : 'open to everyone'));
             
             (function (name) {
                 item.onclick = function () {
@@ -469,6 +474,7 @@
 
             // update checkbox value
             publicedit.checked = room.publicEdit;
+            eighteenplus.checked = room.eighteenPlus;
         } else {
             // disable room settings
             roomsettingsbutton.disabled = true;
@@ -1403,6 +1409,20 @@
         publiceditlabel.appendChild(publicedit);
         appendText(publiceditlabel, ' enable public editing (other users can create objects)');
 
+        eighteenpluslabel = document.createElement('label');
+        roomsettings.content.appendChild(eighteenpluslabel);
+
+        eighteenplus = document.createElement('input');
+        eighteenplus.type = 'checkbox';
+        eighteenplus.onchange = function () {
+            socket.send(JSON.stringify({
+                type: 'room_seteighteenplus',
+                enabled: eighteenplus.checked
+            }));
+        };
+        eighteenpluslabel.appendChild(eighteenplus);
+        appendText(eighteenpluslabel, ' 18+ only');
+
         editdlg = makePopup('#edit-dlg', 'Edit objects', true, 300, 300, true, function () {
             editing = false;
         }, function () {
@@ -2006,6 +2026,10 @@
                         // hide edit dialog
                         editdlg.hide();
                     }
+                break;
+                case 'room_seteighteenplus':
+                    myRoom.eighteenPlus = msg.enabled;
+                    userManager.updateCounter();
                 break;
                 case 'kick_notice':
                     logKickNoticeInChat(msg.mod_nick, msg.mod_special, msg.kickee_nick, msg.kickee_special, msg.reason);

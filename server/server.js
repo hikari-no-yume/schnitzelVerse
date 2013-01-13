@@ -1073,6 +1073,35 @@ wsServer.on('request', function(request) {
                     user.kick('protocol_error');
                 }
             break;
+            case 'room_seteighteenplus':
+                if (user.room) {
+                    var room = Rooms.get(user.room);
+                    if (room.owner === myNick) {
+                        room.eighteenPlus = msg.enabled;
+                        Rooms.save();
+                        // broadcast new state to other clients in same room
+                        User.forEach(function (iterUser) {
+                            if (iterUser.room === user.room) {
+                                iterUser.send({
+                                    type: 'room_seteighteenplus',
+                                    enabled: room.eighteenPlus
+                                });
+                                iterUser.send({
+                                    type: 'console_msg',
+                                    msg: 'Room now open to ' + (room.eighteenPlus ? '18+ only' : 'everyone')
+                                });
+                            }
+                        });
+                    } else {
+                        user.send({
+                            type: 'console_msg',
+                            msg: 'The room "' + room.name + '" does not belong to you'
+                        });
+                    }
+                } else {
+                    user.kick('protocol_error');
+                }
+            break;
             case 'asset_delete':
                 if (Assets.has(msg.id)) {
                     if (Assets.canDelete(msg.id, myNick)) {

@@ -34,6 +34,13 @@ var Rooms = {
 
         return this.rooms[name];
     },
+    getEighteenPlus: function (name) {
+        if (this.rooms.hasOwnProperty(name)) {
+            return this.rooms[name].eighteenPlus;
+        } else {
+            return false;
+        }
+    },
     getUserCount: function (name) {
         if (this.roomUserCounts.hasOwnProperty(name)) {
             return this.roomUserCounts[name];
@@ -61,6 +68,7 @@ var Rooms = {
             objectOrder: [],
             owner: owner,
             publicEdit: false,
+            eighteenPlus: false,
             name: name
         };
         this.save();
@@ -81,7 +89,8 @@ var Rooms = {
             if (this.rooms.hasOwnProperty(name)) {
                 list.push({
                     name: name,
-                    user_count: this.getUserCount(name)
+                    user_count: this.getUserCount(name),
+                    eighteen_plus: this.getEighteenPlus(name)
                 });
             }
         }

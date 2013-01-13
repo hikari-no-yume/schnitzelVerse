@@ -234,6 +234,15 @@ input[type=submit], .button, button {
     color: #444;
 }
 
+.eighteen-plus {
+    color: red;
+    font-weight: bold;
+}
+.open-to-everyone {
+    color: lime;
+    font-weight: bold;
+}
+
 .chooser {
     width: 450px;
     height: 450px;
