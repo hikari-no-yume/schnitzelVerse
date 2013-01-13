@@ -54,9 +54,10 @@
     fjord.exec = function (script, vars, ctx, maxWidth, maxHeight) {
         var tokens, tok, i, stack = [], vars = {}, val1, val2, y = 0;
 
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 12pt monospace';
+
         function print(text) {
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 12pt monospace';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
             if (y + 10 < maxHeight) {
@@ -137,6 +138,8 @@
                         vars[val1] = val2;
                     } else if (tok.val === '!print') {
                         print(popString());
+                    } else if (tok.val === '!colour') {
+                        ctx.fillStyle = popString();
                     } else {
                         stack.push(tok);
                     }
