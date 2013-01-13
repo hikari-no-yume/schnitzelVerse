@@ -63,9 +63,6 @@
             if (y + 10 < maxHeight) {
                 ctx.fillText(text, 0, y);
                 y += 20;
-                console.log('!print: ' + text);
-            } else {
-                console.log('!print ERROR: Exceeded object height');
             }
         }
 
