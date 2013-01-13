@@ -1436,7 +1436,7 @@
             },
             {
                 property: 'script',
-                type: 'text'
+                type: 'script'
             }
         ], i, field, prop, btn;
 
@@ -1579,6 +1579,22 @@
                         selectAsset('image', elem);
                     };
                 }(field));
+                editprops.appendChild(btn);
+            } else if (prop.type === 'script') {
+                field = document.createElement('textarea');
+                field.cols = 20;
+                field.rows = 5;
+                field.onfocus = function () {
+                    blockMovement = true;
+                };
+                field.onblur = function () {
+                    blockMovement = false;
+                };
+                editprops.appendChild(field);
+                btn = document.createElement('a');
+                btn.href = '/script_help.html';
+                btn.target = '_blank';
+                appendText(btn, 'script help');
                 editprops.appendChild(btn);
             } else {
                 field = document.createElement('input');

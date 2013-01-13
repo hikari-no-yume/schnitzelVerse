@@ -1,0 +1,70 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>schnitzelVerse - script help</title>
+
+<h1>schnitzelVerse - script help</h1>
+<a href=/>back to schnitzelVerse</a><br>
+
+<p>schnitzelVerse has a small stack-based scripting language. This means variables, strings and numbers are added to a stack, and then pulled off by commands, for example:</p>
+<p><code>10 20 "hello" !textat</code></p>
+<p>10 is pushed on the stack. 20 is pushed on the stack. "hello" is pushed on the stack. !textat pops all three off the stack, and draws the string "hello" at (20,10).</p>
+<p>A more complex example:</p>
+<p><code>10 20 + "20 + 10 = " . !print</code></p>
+<p>10 and 20 are placed on the stack. The + operator pops 20 and 10 off the stack, adds them and places the result (30) on the stack. "20 + 10 = " is pushed onto the stack. The . operator pops "20 + 10 = " off the stack and 30 off the stack, concatenates them and places the result ("20 + 10 = 30") on the stack. !print pops "20 + 10 = 30" off the stack and displays it.</p>
+<h2>Operators</h2>
+<ul>
+    <li>+ adds 2 numbers, e.g. <code>20 10 +</code> results in 30
+    <li>- subtracts 2 numbers, e.g. <code>20 10 -</code> results in -10
+    <li>* multiplies 2 numbers, e.g. <code>3 10 *</code> results in 30
+    <li>/ divides 2 numbers (integer division, no floating point), e.g. <code>5 12 /</code> results in 2
+    <li>. concatenates two strings/numbers, e.g. <code>", world" "hello"</code> results in "hello, world"
+    <li>= sets a variable, e.g. <code>"hello, world" x =</code> sets x to "hello, world"
+</ul>
+<h2>Variables</h2>
+<p>You can reference a variable's value by naming it. You can set a variable's value with the = operator. Along with user-defined variables, there are also the following built-ins:</p>
+<ul>
+    <li>playerX - player's X position
+    <li>playerY - player's Y position
+    <li>playerXRel - player's X position relative to object (useful for graphics)
+    <li>playerYRel - player's Y position relative to object
+    <li>playerNick - player's nickname
+    <li>objectX - object's X position
+    <li>objectY - object's Y position
+    <li>objectWidth - object's width
+    <li>objectHeight - object's height
+    <li>msecs - milliseconds since 00:00 1 January 1970, useful for animation, time, etc.
+</ul>
+<h2>Functions</h2>
+<ul>
+    <li>!print - displays text on the next line (line reset by !clear), e.g. <code>"hello, world" !print</code>
+    <li>!colour - sets drawing colour (used by !print, !textat, !clear, !boxat), can be any CSS colour (rgb(r,g,b) format, #RRGGBB, named colours...) e.g. <code>"orange" !colour</code>
+    <li>!font - sets font style, follows CSS font property syntax, e.g. <code>"bold 12pt Arial" !font</code>, <code>"10pt sans-serif" !font</code>
+    <li>!clear - resets !print line position and clears background with current drawing colour
+    <li>!boxat - draws filled box with given width height, pops x, y, width, then height off stack (hence you need to do <code>[height] [width] [y] [x] !drawbox</code>), e.g. <code>100 100 10 10 !boxat</code>
+    <li>!textat - draws text at specified position, pops text, x, then y off stack (hence you need to do <code>[y] [x] [text] !textat</code>), e.g. <code>20 20 "hey" !textat</code></li>
+</ul>
+<h2>Examples</h2>
+<h3>Scoreboard</h3>
+<p><code>"rgb(79,97,80)" !colour<br>
+!clear<br>
+<br>
+"10pt sans-serif" !font<br>
+"black" !colour<br>
+"leaderboard test (fake)" !print<br>
+<br>
+"purple" !colour<br>
+20 objectWidth 18 0 !boxat<br>
+"white" !colour<br>
+"bold 10pt sans-serif" !font<br>
+"1. us" !print<br>
+<br>
+"black" !colour<br>
+<br>
+"2. them" !print<br>
+"3. someoneelse" !print<br>
+"4. somebody" !print<br>
+<br>
+"" !print<br>
+<br>
+"10pt sans-serif" !font playerNick "your nick is " . !print
+</code></p>

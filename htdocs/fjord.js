@@ -29,7 +29,7 @@
                         val: curtok
                     });
                 } else {
-                    while (str[0] !== ' ' && str) {
+                    while (str[0] > ' ' && str) {
                         curtok += str[0];
                         str = str.substr(1);
                     }
