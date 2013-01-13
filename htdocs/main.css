@@ -235,11 +235,11 @@ input[type=submit], .button, button {
 }
 
 .eighteen-plus {
-    color: red;
+    color: maroon;
     font-weight: bold;
 }
 .open-to-everyone {
-    color: lime;
+    color: green;
     font-weight: bold;
 }
 

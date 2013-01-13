@@ -422,11 +422,12 @@
             var item = document.createElement('li');
             if (!data.user_count) {
                 item.className += ' empty-room';
-            }
-            if (data.eighteen_plus) {
-                item.className += ' eighteen-plus';
             } else {
-                item.className += ' open-to-everyone';
+                if (data.eighteen_plus) {
+                    item.className += ' eighteen-plus';
+                } else {
+                    item.className += ' open-to-everyone';
+                }
             }
             appendText(item, '"' + data.name + '" (' + data.user_count + ' users) - ' + (data.eighteen_plus ? '18+ ONLY' : 'open to everyone'));
             
