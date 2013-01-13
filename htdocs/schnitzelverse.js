@@ -1565,6 +1565,12 @@
                 field = document.createElement('input');
                 field.type = 'text';
                 field.readonly = true;
+                field.onfocus = function () {
+                    blockMovement = true;
+                };
+                field.onblur = function () {
+                    blockMovement = false;
+                };
                 editprops.appendChild(field);
                 btn = document.createElement('button');
                 appendText(btn, 'Choose asset');
@@ -1577,6 +1583,12 @@
             } else {
                 field = document.createElement('input');
                 field.type = prop.type;
+                field.onfocus = function () {
+                    blockMovement = true;
+                };
+                field.onblur = function () {
+                    blockMovement = false;
+                };
                 editprops.appendChild(field);
             }
 
