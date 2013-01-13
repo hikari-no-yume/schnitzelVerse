@@ -754,6 +754,66 @@ function handleCommand(cmd, myNick, user) {
             sendLine('RIP BILLY MAYS');
             user.billyMays = true;
         }
+    // delete account
+    } else if (isCreator && cmd.substr(0, 7) === 'delacc ') {
+        var acc = cmd.substr(7);
+        if (!User.hasAccount(acc)) {
+            sendLine('No such user: "' + acc + '"');
+        } else {
+            if (User.inventoryEmpty(acc)) {
+                User.deleteAccount(acc);
+                user.send({
+                    type: 'console_msg',
+                    msg: 'deleted "' + acc + '"'
+                });
+            } else {
+                user.send({
+                    type: 'console_msg',
+                    msg: 'account has non-empty inventory'
+                });
+            }
+        }
+    // view inventory
+    } else if (isCreator && cmd.substr(0, 8) === 'viewinv ') {
+        var acc = cmd.substr(8);
+        if (!User.hasAccount(acc)) {
+            sendLine('No such user: "' + acc + '"');
+        } else {
+            var inventory = User.getInventory(acc);
+            for (var i = 0; i < inventory.length; i++) {
+                sendLine((i) + ' - ' + JSON.stringify(inventory[i]));
+            }
+            sendLine('(' + inventory.length + ' total)');
+        }
+    // delete asset
+    } else if (isCreator && cmd.substr(0, 9) === 'delasset ') {
+        var asset = cmd.substr(9);
+        if (!Assets.has(asset)) {
+            sendLine('No such asset: "' + asset + '"');
+        } else {
+            asset = Assets.get(asset);
+            var inventory = User.getInventory(asset.owner), inventoryID = -1;
+            for (var i = 0; i < inventory.length; i++) {
+                if (inventory[i].type === 'asset' && inventory[i].data.id === asset.id) {
+                    inventoryID = i;
+                    break;
+                }
+            }
+            if (inventoryID === -1) {
+                sendLine('Error: Could not find asset in user inventory.');
+            } else {
+                Assets.delete(asset.id, function (success) {
+                    var item;
+
+                    if (success) {
+                        User.removeInventoryItem(asset.owner, inventoryID);
+                        sendLine('Deleted asset.');
+                    } else {
+                        sendLine('Asset delete failed.');
+                    }
+                });
+            }
+        }
     // unknown
     } else {
         sendLine('Unknown command');
