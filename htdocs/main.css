@@ -230,6 +230,10 @@ input[type=submit], .button, button {
     pointer-events: none;
 }
 
+.empty-room {
+    color: #444;
+}
+
 .chooser {
     width: 450px;
     height: 450px;

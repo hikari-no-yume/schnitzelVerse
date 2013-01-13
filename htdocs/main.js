@@ -420,6 +420,9 @@
         for (var i = 0; i < rooms.length; i++) {
             var data = rooms[i];
             var item = document.createElement('li');
+            if (!data.user_count) {
+                item.className = 'empty-room';
+            }
             appendText(item, '"' + data.name + '" (' + data.user_count + ' users)');
             
             (function (name) {
