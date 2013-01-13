@@ -1621,7 +1621,7 @@
         rmpassbutton.type = 'submit';
         rmpassbutton.value = 'Delete account';
         rmpassbutton.onclick = function () {
-            if (confirm("Are you sure you want to delete your schnitzelVerse account?\nYou'll loose all of your bits, items, avatars, your house, and your nickname!\nNote: This will *not* do anything to your Persona ID.")) {
+            if (confirm("Are you sure you want to delete your schnitzelVerse account?\nYou'll loose all of your bits, items, rooms, and your nickname!\nNote: This will *not* do anything to your Persona ID.")) {
                 socket.send(JSON.stringify({
                     type: 'delete_account'
                 }));

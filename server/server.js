@@ -883,8 +883,15 @@ wsServer.on('request', function(request) {
                 });
             break;
             case 'delete_account':
-                User.deleteAccount(myNick);
-                user.kick('account_deleted');
+                if (User.inventoryEmpty(myNick)) {
+                    User.deleteAccount(myNick);
+                    user.kick('account_deleted');
+                } else {
+                    user.send({
+                        type: 'console_msg',
+                        msg: 'You must clear your inventory before deleting your account.'
+                    });
+                }
             break;
             case 'room_change':
                 if (msg.name.indexOf(' ') === -1) {

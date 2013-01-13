@@ -289,6 +289,9 @@ User.getInventoryItem = function (nick, itemID) {
         return null;
     }
 };
+User.inventoryEmpty = function (nick) {
+    return this.getInventory(nick).length === 0;
+};
 User.removeInventoryItem = function (nick, itemID) {
     var inventory = this.getInventory(nick);
     if (inventory.hasOwnProperty(itemID)) {
