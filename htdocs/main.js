@@ -459,6 +459,9 @@
 
         myRoom = room;
 
+        // jump to room centre
+        me.x = me.y = 0;
+
         // add me
         userManager.add(myNick, me, mySpecialStatus, true, false);
 
