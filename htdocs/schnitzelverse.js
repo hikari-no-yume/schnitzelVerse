@@ -1583,7 +1583,7 @@
             } else if (prop.type === 'script') {
                 field = document.createElement('textarea');
                 field.cols = 20;
-                field.rows = 5;
+                field.rows = 10;
                 field.onfocus = function () {
                     blockMovement = true;
                 };
