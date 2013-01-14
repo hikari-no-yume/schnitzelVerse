@@ -2202,9 +2202,9 @@
                 div.innerHTML = '';
                 if (xhr.status === 200) {
                     stats = JSON.parse(xhr.responseText);
-                    div.appendChild(document.createTextNode(stats.clients_connected + ' clients connected'));
+                    div.appendChild(document.createTextNode(stats.users_online + ' users online'));
                 } else {
-                    div.appendChild(document.createTextNode('Loading stats failed'));
+                    div.appendChild(document.createTextNode('Loading stats failed - sv may be down'));
                 }
             }
         };

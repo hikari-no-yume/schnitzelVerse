@@ -34,7 +34,7 @@ var server = http.createServer(function(request, response) {
     if (parts.pathname === '/stats' && request.method === 'GET') {
         response.writeHead(200, headers);
         response.end(JSON.stringify({
-            clients_connected: User.userCount
+            users_online: User.userCount
         }));
     // upload form
     } else if (parts.pathname === '/upload' && request.method === 'GET') {
