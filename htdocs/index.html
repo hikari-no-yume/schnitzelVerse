@@ -11,3 +11,90 @@ But this post is about the fact it might not be for much longer.<br>
 <p>So somehow, someday, I need to either hand over control of both projects to someone who can host and maintain them, or kill them off. I'm sorry about this, but that's how it has to be. I just can't keep up with maintaining them now.<br>
 <p>schnitzelVerse is crashing too often, and I have to fix the bugs each time, and it's not fun. So next time it goes down, I can't guarantee it will come back up. Sorry.
 <p>~<a href="http://ajf.me/">ajf</a>
+<p>P.S., don't believe me? Here's a chatlog with Berry about the problems with the code. Andrea is me, Lerke is Berry.
+<p>Lerke: Well bro, congrats<br>
+Lerke: You fucking made ponyplace into a /b/ chatroom :v<br>
+Andrea: :o<br>
+Lerke is now Away.<br>
+Lerke is now Online.<br>
+Andrea: lerk help<br>
+Andrea: sv and pp are unmaintainable code heaps of shit<br>
+Andrea: wat do<br>
+Lerke: I know this<br>
+Andrea: like<br>
+Andrea: the client code is basically one really long JS file<br>
+Andrea: ok the scripting is separate<br>
+Andrea: and persona is too<br>
+Andrea: but aside from that, one hueg js file<br>
+Lerke: I kno<br>
+Andrea: and a huge css file<br>
+Andrea: the server isn't much better.... rooms, assets, users separate files<br>
+Andrea: but the bulk one huge file<br>
+Andrea: and the way it's structured is fucking unmaintainable<br>
+Andrea: there are no private properties anywhere<br>
+Lerke: You don't say<br>
+Lerke: I commented on this ages ago tm<br>
+Andrea: encapsulation is circumvented all over the place<br>
+Andrea: information hiding is ignored<br>
+Andrea: and then not ignored<br>
+Andrea: there is no database, it's all flat file<br>
+Andrea: and a bloody mess, too<br>
+Andrea: heck, it's not even consistent on lowercase_underscores or camelCasing<br>
+Lerke: I never understood why you didn't use a MySQL db<br>
+Andrea: actually, the answer to that is simple<br>
+Andrea: fucking callbacks<br>
+Andrea: make life hard<br>
+Andrea: if this was python I'd use sqlite<br>
+Andrea: but it's not<br>
+Lerke: Doesn't really matter though? It's solid and scalable, gege.<br>
+Andrea: it's node.js<br>
+Andrea: no, callbacks make coding hard<br>
+Andrea: because<br>
+Andrea: mysql.dosomething(..., function (result, error) { if (!error) { mysql.dosomethingelse(..., function (result, error) { if (!error) { mysql.dosomething(..., function (result, error) { if (!error) { oh wait I can't return this function call I have to callback, so callback(result)<br>
+Andrea: becomes difficult to maintain and debug asynchronous spaghetti heap<br>
+Andrea: and race conditions<br>
+Andrea: race conditions everywhere<br>
+Lerke: wtf?<br>
+Andrea: node.js is event driven<br>
+Andrea: that means callbacks<br>
+Andrea: not blocking calls<br>
+Andrea: it means speed, but it also makes things harder<br>
+Lerke: I know that<br>
+Andrea: goddamnit should have used go<br>
+Andrea: coroutines<br>
+Andrea: lightweight structs<br>
+Andrea: but also hng<br>
+Andrea: error checking<br>
+Andrea: error checking everywhere<br>
+Andrea: no exceptions, just manual error checking<br>
+Andrea: so not go<br>
+Andrea: what about C#?<br>
+Andrea: well C# is all static and shit<br>
+Andrea: and it makes my life hard in different ways<br>
+Andrea: basically I'm shit at coding<br>
+Lerke: 0:44 - Andrea: well C# is all static and shit<br>
+Lerke: What?<br>
+Andrea: better than some<br>
+Andrea: but still shit<br>
+Andrea: Lerke: I mean C# has a static typing and classes fetish<br>
+Andrea: everything is in a class<br>
+Lerke: Not by default?<br>
+Andrea: everything is typed<br>
+Lerke: Like proper oop.<br>
+Andrea: eh<br>
+Andrea: it would help in some ways, wouldn't in others<br>
+Andrea: at least VS has refactoring, in the pro versions<br>
+Andrea: but yeah I suck at coding<br>
+Andrea: also<br>
+Andrea: I reinvented the wheel too many times<br>
+Andrea: ponyplace/sV's UI is fucking glitchy and broken<br>
+Andrea: why?<br>
+Andrea: I redid it all from scratch<br>
+Andrea: instead of like<br>
+Andrea: using a library like bootstrap<br>
+Andrea: and a proper framework<br>
+Andrea: and to be honest I should perhaps just put sV and pp to rest for good<br>
+Andrea: thing is I'd upset a lot of people if I did that<br>
+Andrea: but if I run it I have an active responsibility to, for example, keep it online<br>
+Andrea: and fix the bugs that crash it<br>
+
