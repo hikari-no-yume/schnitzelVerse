@@ -76,10 +76,8 @@
         ctx.textBaseline = 'top';
 
         function print(text) {
-            if (y + 10 < maxHeight) {
-                ctx.fillText(text, 0, y);
-                y += 20;
-            }
+            ctx.fillText(text, 0, y);
+            y += 20;
         }
 
         function textAt(text, x, y) {
