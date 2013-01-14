@@ -18,7 +18,9 @@
     <li>* multiplies 2 numbers, e.g. <code>3 10 *</code> results in 30
     <li>/ divides 2 numbers (integer division, no floating point), e.g. <code>5 12 /</code> results in 2
     <li>. concatenates two strings/numbers, e.g. <code>", world" "hello"</code> results in "hello, world"
+    <li>% divides 2 numbers and returns the remainder (modulo), e.g. <code>2 7 %</code> results in 1
     <li>= sets a variable, e.g. <code>"hello, world" x =</code> sets x to "hello, world"
+    <li>& gets the variable with a given name, e.g. <code>"y" & 3 =</code> is equivalent to just <code>y 3 =</code>. This is useful for algorithmically setting/getting values.
 </ul>
 <h2>Variables</h2>
 <p>You can reference a variable's value by naming it. You can set a variable's value with the = operator. Along with user-defined variables, there are also the following built-ins:</p>
@@ -36,15 +38,24 @@
 </ul>
 <h2>Functions</h2>
 <ul>
-    <li>!print - displays text on the next line (line reset by !clear), e.g. <code>"hello, world" !print</code>
-    <li>!colour - sets drawing colour (used by !print, !textat, !clear, !boxat), can be any CSS colour (rgb(r,g,b) format, #RRGGBB, named colours...) e.g. <code>"orange" !colour</code>
-    <li>!font - sets font style, follows CSS font property syntax, e.g. <code>"bold 12pt Arial" !font</code>, <code>"10pt sans-serif" !font</code>
+    <li>!print - displays text on the next line (line reset by !clear), e.g. <code>"hello, world" !print</code> would display <code>hello, world</code> on the next line
+    <li>!colour - sets drawing colour (used by !print, !textat, !clear, !boxat), can be any CSS colour (rgb(r,g,b) format, #RRGGBB, named colours...) e.g. <code>"orange" !colour</code> would set the colour to orange
+    <li>!font - sets font style, follows CSS font property syntax, e.g. <code>"bold 12pt Arial" !font</code> sets the font to 12pt size bold Arial, <code>"10pt sans-serif" !font</code> sets the font to 10pt size with the system default sans-serif font
     <li>!clear - resets !print line position and clears background with current drawing colour
-    <li>!boxat - draws filled box with given width height, pops x, y, width, then height off stack (hence you need to do <code>[height] [width] [y] [x] !drawbox</code>), e.g. <code>100 100 10 10 !boxat</code>
-    <li>!textat - draws text at specified position, pops text, x, then y off stack (hence you need to do <code>[y] [x] [text] !textat</code>), e.g. <code>20 20 "hey" !textat</code></li>
+    <li>!boxat - draws filled box with given width height, pops x, y, width, then height off stack (hence you need to do <code>[height] [width] [y] [x] !drawbox</code>), e.g. <code>100 150 10 20 !boxat</code> draws a 150x100 box at (20, 10)
+    <li>!textat - draws text at specified position, pops text, x, then y off stack (hence you need to do <code>[y] [x] [text] !textat</code>), e.g. <code>10 20 "hey" !textat</code> draws the text <code>hey</code> at (20, 10)
 </ul>
 <h2>Examples</h2>
+<h3>Glowing Square</h3>
+<p>This forms a CSS colour string of the rgb(r, g, b) based on the time. It sets the value of red by (time / 5) % 256, and then clears the canvas with that colour.
+<p><code>msecs 5 / divsecs =
+"rgb(" rgb =
+divsecs 256 % rgb . rgb =
+",0,0)" rgb . rgb =
+rgb !colour
+!clear</code></p>
 <h3>Scoreboard</h3>
+<p>This displays a simple leaderboard.</p>
 <p><code>"rgb(79,97,80)" !colour<br>
 !clear<br>
 <br>

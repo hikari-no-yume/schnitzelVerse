@@ -99,8 +99,7 @@
             if (vars.hasOwnProperty(name)) {
                 return vars[name];
             } else {
-                print('ERROR: unknown variable "' + name + '"');
-                return undefined;
+                throw new Error('ERROR: unknown variable "' + name + '"');
             }
         }
 
@@ -144,6 +143,12 @@
                 return val.val;
             }
         }
+        function pushVar(val) {
+            stack.push({
+                type: 'var',
+                val: val
+            });
+        }
 
         tokens = split(script);
 
@@ -151,7 +156,9 @@
             tok = tokens[i];
             if (tok.type === 'number') {
                 pushNum(tok.val);
-            } else {
+            } else if (tok.type === 'string') {
+                pushString(tok.val);
+            } else if (tok.type === 'var') {
                 try {
                     if (tok.val === '*') {
                         pushNum(popNum() * popNum());
@@ -159,6 +166,10 @@
                         val1 = popNum();
                         val2 = popNum();
                         pushNum(Math.floor(val2 / val1));
+                    } else if (tok.val === '%') {
+                        val1 = popNum();
+                        val2 = popNum();
+                        pushNum(Math.floor(val2 % val1));
                     } else if (tok.val === '+') {
                         pushNum(popNum() + popNum());
                     } else if (tok.val === '-') {
@@ -171,6 +182,8 @@
                         val1 = popVar();
                         val2 = stack.pop();
                         vars[val1] = val2;
+                    } else if (tok.val === '&') {
+                        pushVar(popString());
                     } else if (tok.val === '!print') {
                         print(popString());
                     } else if (tok.val === '!colour') {
@@ -191,10 +204,11 @@
                         val3 = popNum();
                         textAt(val1, val2, val3);
                     } else {
-                        stack.push(tok);
+                        pushVar(tok.val);
                     }
                 } catch (e) {
                     print('ERROR: ' + e);
+                    return vars;
                 }
             }
         }
