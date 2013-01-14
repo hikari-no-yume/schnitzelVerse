@@ -1003,7 +1003,7 @@ wsServer.on('request', function(request) {
             break;
             case 'object_add':
                 if (user.room) {
-                    if (Rooms.has(user.room) {
+                    if (Rooms.has(user.room)) {
                         if (Rooms.canCreateObject(user.room, myNick)) {
                             if (Rooms.hasObject(user.room, msg.name)) {
                                 user.send({
@@ -1031,7 +1031,7 @@ wsServer.on('request', function(request) {
             break;
             case 'object_update':
                 if (user.room) {
-                    if (Rooms.has(user.room) {
+                    if (Rooms.has(user.room)) {
                         if (Rooms.hasObject(user.room, msg.name)) {
                             if (Rooms.canEditObject(user.room, myNick, msg.name)) {
                                 Rooms.updateObject(user.room, msg.name, msg.data);
@@ -1060,7 +1060,7 @@ wsServer.on('request', function(request) {
             case 'object_delete':
                 if (user.room) {
                     var room = Rooms.get(user.room);
-                    if (Rooms.has(user.room) {
+                    if (Rooms.has(user.room)) {
                         if (Rooms.hasObject(user.room, msg.name)) {
                             if (Rooms.canEditObject(user.room, myNick, msg.name)) {
                                 Rooms.deleteObject(user.room, msg.name);
@@ -1089,7 +1089,7 @@ wsServer.on('request', function(request) {
             case 'room_setpublicedit':
                 if (user.room) {
                     var room = Rooms.get(user.room);
-                    if (Rooms.has(user.room) {
+                    if (Rooms.has(user.room)) {
                         if (room.owner === myNick) {
                             room.publicEdit = msg.enabled;
                             Rooms.save();
@@ -1125,7 +1125,7 @@ wsServer.on('request', function(request) {
             case 'room_seteighteenplus':
                 if (user.room) {
                     var room = Rooms.get(user.room);
-                    if (Rooms.has(user.room) {
+                    if (Rooms.has(user.room)) {
                         if (room.owner === myNick) {
                             room.eighteenPlus = msg.enabled;
                             Rooms.save();
