@@ -49,10 +49,12 @@
 </ul>
 <h2>Examples</h2>
 <h3>Glowing Square</h3>
-<p>This forms a CSS colour string of the rgb(r, g, b) based on the time. It sets the value of red by (time / 5) % 256, and then clears the canvas with that colour.
-<p><code>msecs 5 / divsecs =<br>
+<p>This forms a CSS colour string of the rgb(r, g, b) based on the time. It sets the value of the red component by calculating sin((time / 20)) * 127 + 127, and then clears the canvas with that colour.
+<p><code>msecs 20 / val =<br>
+127 val !sin 127 * 1000 / val = <br>
+127 val + val =<br>
 "rgb(" rgb =<br>
-divsecs 256 % rgb . rgb =<br>
+val rgb . rgb =<br>
 ",0,0)" rgb . rgb =<br>
 rgb !colour<br>
 !clear</code></p>
