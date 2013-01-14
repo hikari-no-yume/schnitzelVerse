@@ -184,6 +184,10 @@
                         vars[val1] = val2;
                     } else if (tok.val === '&') {
                         pushVar(popString());
+                    } else if (tok.val === '!sin') {
+                        pushNum(Math.floor(1000 * Math.sin(popNum() * Math.PI/180)));
+                    } else if (tok.val === '!cos') {
+                        pushNum(Math.floor(1000 * Math.cos(popNum() * Math.PI/180)));
                     } else if (tok.val === '!print') {
                         print(popString());
                     } else if (tok.val === '!colour') {

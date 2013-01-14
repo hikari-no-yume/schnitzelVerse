@@ -44,6 +44,8 @@
     <li>!clear - resets !print line position and clears background with current drawing colour
     <li>!boxat - draws filled box with given width height, pops x, y, width, then height off stack (hence you need to do <code>[height] [width] [y] [x] !drawbox</code>), e.g. <code>100 150 10 20 !boxat</code> draws a 150x100 box at (20, 10)
     <li>!textat - draws text at specified position, pops text, x, then y off stack (hence you need to do <code>[y] [x] [text] !textat</code>), e.g. <code>10 20 "hey" !textat</code> draws the text <code>hey</code> at (20, 10)
+    <li>!sin - working with degrees, returns the value for 1000sin(x), (i.e values between -1000 and 1000), e.g <code>90 !sin</code> results in 1000, <code>180 !sin</code> results in 0, <code>225 !sin</code> results in -707
+    <li>!cos - same as !sin but for cosine, e.g. <code>180 !cos</code> results in -1000
 </ul>
 <h2>Examples</h2>
 <h3>Glowing Square</h3>
