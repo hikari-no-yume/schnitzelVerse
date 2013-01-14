@@ -657,6 +657,7 @@ function handleCommand(cmd, myNick, user) {
     // broadcast message
     } else if (canMod && cmd.substr(0, 10) === 'broadcast ') {
         var broadcast = cmd.substr(10);
+
         User.forEach(function (iterUser) {
             iterUser.send({
                 type: 'broadcast',
@@ -1002,19 +1003,26 @@ wsServer.on('request', function(request) {
             break;
             case 'object_add':
                 if (user.room) {
-                    if (Rooms.canCreateObject(user.room, myNick)) {
-                        if (Rooms.hasObject(user.room, msg.name)) {
+                    if (Rooms.has(user.room) {
+                        if (Rooms.canCreateObject(user.room, myNick)) {
+                            if (Rooms.hasObject(user.room, msg.name)) {
+                                user.send({
+                                    type: 'console_msg',
+                                    msg: 'There is already an object named "' + msg.name + '"'
+                                });
+                            } else {
+                                Rooms.addObject(user.room, myNick, msg.name, msg.data);
+                            }
+                        } else {
                             user.send({
                                 type: 'console_msg',
-                                msg: 'There is already an object named "' + msg.name + '"'
+                                msg: 'You do not have permission to create objects in this room'
                             });
-                        } else {
-                            Rooms.addObject(user.room, myNick, msg.name, msg.data);
                         }
                     } else {
                         user.send({
                             type: 'console_msg',
-                            msg: 'You do not have permission to create objects in this room'
+                            msg: 'The room "' + room.name + '" does not exist'
                         });
                     }
                 } else {
@@ -1023,19 +1031,26 @@ wsServer.on('request', function(request) {
             break;
             case 'object_update':
                 if (user.room) {
-                    if (Rooms.hasObject(user.room, msg.name)) {
-                        if (Rooms.canEditObject(user.room, myNick, msg.name)) {
-                            Rooms.updateObject(user.room, msg.name, msg.data);
+                    if (Rooms.has(user.room) {
+                        if (Rooms.hasObject(user.room, msg.name)) {
+                            if (Rooms.canEditObject(user.room, myNick, msg.name)) {
+                                Rooms.updateObject(user.room, msg.name, msg.data);
+                            } else {
+                                user.send({
+                                    type: 'console_msg',
+                                    msg: 'You do not have permission to edit the object "' + msg.name + '"'
+                                });
+                            }
                         } else {
                             user.send({
                                 type: 'console_msg',
-                                msg: 'You do not have permission to edit the object "' + msg.name + '"'
+                                msg: 'There is no object named "' + msg.name + '"'
                             });
                         }
                     } else {
                         user.send({
                             type: 'console_msg',
-                            msg: 'There is no object named "' + msg.name + '"'
+                            msg: 'The room "' + room.name + '" does not exist'
                         });
                     }
                 } else {
@@ -1045,19 +1060,26 @@ wsServer.on('request', function(request) {
             case 'object_delete':
                 if (user.room) {
                     var room = Rooms.get(user.room);
-                    if (Rooms.hasObject(user.room, msg.name)) {
-                        if (Rooms.canEditObject(user.room, myNick, msg.name)) {
-                            Rooms.deleteObject(user.room, msg.name);
+                    if (Rooms.has(user.room) {
+                        if (Rooms.hasObject(user.room, msg.name)) {
+                            if (Rooms.canEditObject(user.room, myNick, msg.name)) {
+                                Rooms.deleteObject(user.room, msg.name);
+                            } else {
+                                user.send({
+                                    type: 'console_msg',
+                                    msg: 'You do not have permission to edit the object "' + msg.name + '"'
+                                });
+                            }
                         } else {
                             user.send({
                                 type: 'console_msg',
-                                msg: 'You do not have permission to edit the object "' + msg.name + '"'
+                                msg: 'There is no object named "' + msg.name + '"'
                             });
                         }
                     } else {
                         user.send({
                             type: 'console_msg',
-                            msg: 'There is no object named "' + msg.name + '"'
+                            msg: 'The room "' + room.name + '" does not exist'
                         });
                     }
                 } else {
@@ -1067,26 +1089,33 @@ wsServer.on('request', function(request) {
             case 'room_setpublicedit':
                 if (user.room) {
                     var room = Rooms.get(user.room);
-                    if (room.owner === myNick) {
-                        room.publicEdit = msg.enabled;
-                        Rooms.save();
-                        // broadcast new state to other clients in same room
-                        User.forEach(function (iterUser) {
-                            if (iterUser.room === user.room) {
-                                iterUser.send({
-                                    type: 'room_setpublicedit',
-                                    enabled: room.publicEdit
-                                });
-                                iterUser.send({
-                                    type: 'console_msg',
-                                    msg: 'Public editing ' + (room.publicEdit ? 'enabled' : 'disabled')
-                                });
-                            }
-                        });
+                    if (Rooms.has(user.room) {
+                        if (room.owner === myNick) {
+                            room.publicEdit = msg.enabled;
+                            Rooms.save();
+                            // broadcast new state to other clients in same room
+                            User.forEach(function (iterUser) {
+                                if (iterUser.room === user.room) {
+                                    iterUser.send({
+                                        type: 'room_setpublicedit',
+                                        enabled: room.publicEdit
+                                    });
+                                    iterUser.send({
+                                        type: 'console_msg',
+                                        msg: 'Public editing ' + (room.publicEdit ? 'enabled' : 'disabled')
+                                    });
+                                }
+                            });
+                        } else {
+                            user.send({
+                                type: 'console_msg',
+                                msg: 'The room "' + room.name + '" does not belong to you'
+                            });
+                        }
                     } else {
                         user.send({
                             type: 'console_msg',
-                            msg: 'The room "' + room.name + '" does not belong to you'
+                            msg: 'The room "' + room.name + '" does not exist'
                         });
                     }
                 } else {
@@ -1096,26 +1125,33 @@ wsServer.on('request', function(request) {
             case 'room_seteighteenplus':
                 if (user.room) {
                     var room = Rooms.get(user.room);
-                    if (room.owner === myNick) {
-                        room.eighteenPlus = msg.enabled;
-                        Rooms.save();
-                        // broadcast new state to other clients in same room
-                        User.forEach(function (iterUser) {
-                            if (iterUser.room === user.room) {
-                                iterUser.send({
-                                    type: 'room_seteighteenplus',
-                                    enabled: room.eighteenPlus
-                                });
-                                iterUser.send({
-                                    type: 'console_msg',
-                                    msg: 'Room now open to ' + (room.eighteenPlus ? '18+ only' : 'everyone')
-                                });
-                            }
-                        });
+                    if (Rooms.has(user.room) {
+                        if (room.owner === myNick) {
+                            room.eighteenPlus = msg.enabled;
+                            Rooms.save();
+                            // broadcast new state to other clients in same room
+                            User.forEach(function (iterUser) {
+                                if (iterUser.room === user.room) {
+                                    iterUser.send({
+                                        type: 'room_seteighteenplus',
+                                        enabled: room.eighteenPlus
+                                    });
+                                    iterUser.send({
+                                        type: 'console_msg',
+                                        msg: 'Room now open to ' + (room.eighteenPlus ? '18+ only' : 'everyone')
+                                    });
+                                }
+                            });
+                        } else {
+                            user.send({
+                                type: 'console_msg',
+                                msg: 'The room "' + room.name + '" does not belong to you'
+                            });
+                        }
                     } else {
                         user.send({
                             type: 'console_msg',
-                            msg: 'The room "' + room.name + '" does not belong to you'
+                            msg: 'The room "' + room.name + '" does not exist'
                         });
                     }
                 } else {
@@ -1286,6 +1322,7 @@ wsServer.on('request', function(request) {
     connection.once('message', function(message) {
         if (!amConnected) {
             return;
+
         }
 
         // handle unexpected packet types
