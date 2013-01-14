@@ -257,11 +257,19 @@ var Rooms = {
         });
     },
     canCreateObject: function (roomName, nick) {
+        if (!this.has(roomName)) {
+            return false;
+        }
+
         var room = this.get(roomName);
 
         return (room.owner === nick || User.isModerator(nick) || room.publicEdit);
     },
     canEditObject: function (roomName, nick, objectName) {
+        if (!this.has(roomName)) {
+            return false;
+        }
+
         var room = this.get(roomName), object = room.objects[objectName];
 
         return (room.owner === nick || object.owner === nick || User.isModerator(nick));
