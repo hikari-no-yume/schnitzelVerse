@@ -1077,43 +1077,10 @@
     }
 
     function render() {
-        var radGrad, i, object, objectName, img, x, y, delta, self, star, starnum, starspeed, now, size;
+        var radGrad, i, object, objectName, img, x, y, delta, self;
 
         worldcanvas.width = window.innerWidth;
         worldcanvas.height = window.innerHeight;
-
-        /*starnum = Math.floor(Math.sqrt(worldcanvas.width * worldcanvas.height) / 2);
-        starspeed = 115;
-
-        if (stars.length < starnum - 1) {
-            for (i = stars.length; i < starnum; i += 1) {
-                star = {
-                    x: Math.random() * worldcanvas.width,
-                    y: Math.random() * worldcanvas.height,
-                    depth: Math.pow(Math.random(), 2),
-                    prev: secs()
-                };
-                stars.push(star);
-            }
-        } else if (stars.length > starnum - 1) {
-            stars.splice(starnum);
-        }
-
-        for (i = 0; i < stars.length; i += 1) {
-            now = secs();
-            stars[i].x -= stars[i].depth * starspeed * (now - stars[i].prev);
-            stars[i].prev = now;
-
-            if (stars[i].x < 0 || stars[i].x > worldcanvas.width || stars[i].y < 0 || stars[i].y > worldcanvas.height) {
-                stars.splice(i, 1);
-                i -= 1;
-                continue;
-            }
-
-            size = 3 * stars[i].depth;
-            ctx.fillStyle = 'white';
-            ctx.fillRect(stars[i].x - size / 2, stars[i].y - size / 2, size, size);
-        }*/
 
         if (myRoom) {
             // tween my user position for camera
