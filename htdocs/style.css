@@ -128,7 +128,7 @@ body {
 #main.full {
     position: absolute;
     left: 0;
-    top: 25px;
+    top: 0;
     width: 100%;
     bottom: 0;
     height: auto;
