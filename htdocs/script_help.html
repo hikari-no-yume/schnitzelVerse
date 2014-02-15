@@ -39,9 +39,9 @@
 <h2>Functions</h2>
 <ul>
     <li>!print - displays text on the next line (line reset by !clear), e.g. <code>"hello, world" !print</code> would display <code>hello, world</code> on the next line
-    <li>!colour - sets drawing colour (used by !print, !textat, !clear, !boxat), can be any CSS colour (rgb(r,g,b) format, #RRGGBB, named colours...) e.g. <code>"orange" !colour</code> would set the colour to orange
+    <li>!color - sets drawing color (used by !print, !textat, !clear, !boxat), can be any CSS color (rgb(r,g,b) format, #RRGGBB, named colors...) e.g. <code>"orange" !color</code> would set the color to orange
     <li>!font - sets font style, follows CSS font property syntax, e.g. <code>"bold 12pt Arial" !font</code> sets the font to 12pt size bold Arial, <code>"10pt sans-serif" !font</code> sets the font to 10pt size with the system default sans-serif font
-    <li>!clear - resets !print line position and clears background with current drawing colour
+    <li>!clear - resets !print line position and clears background with current drawing color
     <li>!boxat - draws filled box with given width height, pops x, y, width, then height off stack (hence you need to do <code>[height] [width] [y] [x] !drawbox</code>), e.g. <code>100 150 10 20 !boxat</code> draws a 150x100 box at (20, 10)
     <li>!textat - draws text at specified position, pops text, x, then y off stack (hence you need to do <code>[y] [x] [text] !textat</code>), e.g. <code>10 20 "hey" !textat</code> draws the text <code>hey</code> at (20, 10)
     <li>!sin - working with degrees, returns the value for 1000sin(x), (i.e values between -1000 and 1000), e.g <code>90 !sin</code> results in 1000, <code>180 !sin</code> results in 0, <code>225 !sin</code> results in -707
@@ -49,31 +49,31 @@
 </ul>
 <h2>Examples</h2>
 <h3>Glowing Square</h3>
-<p>This forms a CSS colour string of the rgb(r, g, b) based on the time. It sets the value of the red component by calculating sin((time / 20)) * 127 + 127, and then clears the canvas with that colour.
+<p>This forms a CSS color string of the rgb(r, g, b) based on the time. It sets the value of the red component by calculating sin((time / 20)) * 127 + 127, and then clears the canvas with that color.
 <p><code>msecs 20 / val =<br>
 127 val !sin 127 * 1000 / val = <br>
 127 val + val =<br>
 "rgb(" rgb =<br>
 val rgb . rgb =<br>
 ",0,0)" rgb . rgb =<br>
-rgb !colour<br>
+rgb !color<br>
 !clear</code></p>
 <h3>Scoreboard</h3>
 <p>This displays a simple leaderboard.</p>
-<p><code>"rgb(79,97,80)" !colour<br>
+<p><code>"rgb(79,97,80)" !color<br>
 !clear<br>
 <br>
 "10pt sans-serif" !font<br>
-"black" !colour<br>
+"black" !color<br>
 "leaderboard test (fake)" !print<br>
 <br>
-"purple" !colour<br>
+"purple" !color<br>
 20 objectWidth 18 0 !boxat<br>
-"white" !colour<br>
+"white" !color<br>
 "bold 10pt sans-serif" !font<br>
 "1. us" !print<br>
 <br>
-"black" !colour<br>
+"black" !color<br>
 <br>
 "2. them" !print<br>
 "3. someoneelse" !print<br>

@@ -204,7 +204,7 @@
                         pushNum(Math.floor(1000 * Math.cos(popNum() * Math.PI/180)));
                     } else if (tok.val === '!print') {
                         print(popString());
-                    } else if (tok.val === '!colour') {
+                    } else if (tok.val === '!color') {
                         ctx.fillStyle = popString();
                     } else if (tok.val === '!font') {
                         ctx.font = popString();
