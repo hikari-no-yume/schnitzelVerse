@@ -1104,8 +1104,10 @@
             stars[i].x -= stars[i].depth * starspeed * (now - stars[i].prev);
             stars[i].prev = now;
 
-            while (stars[i].x < 0) {
-                stars[i].x += worldcanvas.width;
+            if (stars[i].x < 0 || stars[i].x > worldcanvas.width || stars[i].y < 0 || stars[i].y > worldcanvas.height) {
+                stars.splice(i, 1);
+                i -= 1;
+                continue;
             }
 
             size = 3 * stars[i].depth;
