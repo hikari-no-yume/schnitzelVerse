@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var fjord = {}, numRegex = /^[0-9]+$/g;
+    var fjord = {}, numRegex = /^[0-9]+$/g, cache = {}, cacheSize = 0;
     window.fjord = fjord;
 
     function split(str) {
@@ -148,7 +148,23 @@
             });
         }
 
-        tokens = split(script);
+        if (cache.hasOwnProperty(script)) {
+            tokens = cache[script];
+        } else {
+            tokens = cache[script] = split(script);
+            cacheSize += 1;
+            console.log('Cached script ' + JSON.stringify(script.substr(0, 64) + '...') + ' - cache size now ' + cacheSize);
+            // Prune cache
+            if (cacheSize > 64) {
+                Object.keys(cache).forEach(function (key) {
+                    if (key !== script) {
+                        delete cache[key];
+                        cacheSize -= 1;
+                    }
+                });
+                console.log('Pruned cache, cache size now ' + cacheSize);
+            }
+        }
 
         for (i = 0; i < tokens.length; i++) {
             tok = tokens[i];

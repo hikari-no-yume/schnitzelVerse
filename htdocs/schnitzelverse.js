@@ -1082,7 +1082,7 @@
         worldcanvas.width = window.innerWidth;
         worldcanvas.height = window.innerHeight;
 
-        starnum = Math.floor(Math.sqrt(worldcanvas.width * worldcanvas.height) / 2);
+        /*starnum = Math.floor(Math.sqrt(worldcanvas.width * worldcanvas.height) / 2);
         starspeed = 115;
 
         if (stars.length < starnum - 1) {
@@ -1113,7 +1113,7 @@
             size = 3 * stars[i].depth;
             ctx.fillStyle = 'white';
             ctx.fillRect(stars[i].x - size / 2, stars[i].y - size / 2, size, size);
-        }
+        }*/
 
         if (myRoom) {
             // tween my user position for camera
