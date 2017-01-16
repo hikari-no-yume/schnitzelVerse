@@ -9,10 +9,10 @@ Configuration
 1. Make sure you have a `special-users.json` file in the `server/data` directory. Make sure the usernames listed have accounts attached, otherwise anyone can create one with that name and use mod powers. Should be of format:
 
         {
-            "joe": "creator",
-            "fred": "moderator",
-            "garry": "moderator",
-            "tomatobot": "bot"
+            "tomiko": "creator",
+            "saki": "moderator",
+            "satoru": "moderator",
+            "mamoru": "bot"
         }
 
 
