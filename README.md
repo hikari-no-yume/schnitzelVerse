@@ -1,7 +1,7 @@
 README
 ======
 
-schnitzelVerse is a WIP 2d online world powered by HTML5, node.js and WebSocket.
+schnitzelVerse is a WIP 2d online world powered by HTML5, node.js and WebSocket. The code is a fork of [ponyplace](https://github.com/TazeTSchnitzel/ponyplace).
 
 Configuration
 -------------
